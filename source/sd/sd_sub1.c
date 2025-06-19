@@ -254,7 +254,7 @@ int tx_read(void)
         }
         else
         {
-            if ((unsigned char)sptr->ngg < 0x64 && mdata4)
+            if (sptr->ngg < 100 && mdata4 != 0)
             {
                 key_fg = 1;
             }
@@ -268,20 +268,17 @@ int tx_read(void)
 
 void note_set(void)
 {
-    unsigned int x;
+    int ngo;
 
     sptr->ngs = mdata2;
     sptr->ngg = mdata3;
+    sptr->ngc = sptr->ngs;
+
+    ngo = (sptr->ngg * sptr->ngc) / 100;
+    sptr->ngo = ngo ? ngo : 1;
+
     sptr->vol = (mdata4 & 0x7F);
     note_compute();
-    sptr->ngc = sptr->ngs;
-    x = (sptr->ngg * sptr->ngc) / 100;
-
-    if (!x)
-    {
-        x = 1;
-    }
-    sptr->ngo = x;
 }
 
 void adsr_reset(void)
@@ -452,9 +449,9 @@ void vol_compute(void)
 
 void pan_generate(void)
 {
-    if (sptr->panc)
+    if (sptr->panc != 0)
     {
-        if (!--sptr->panc)
+        if (--sptr->panc == 0)
         {
             sptr->pand = sptr->panm;
         }
@@ -462,6 +459,7 @@ void pan_generate(void)
         {
             sptr->pand += sptr->panad;
         }
+
         sptr->panf = sptr->pand >> 8;
     }
 }
@@ -712,11 +710,9 @@ void note_cntl(void)
     unsigned int   depth;
     int            frq_data;
 
-    if (sptr->vol != 0 && sptr->tred != 0 &&
-        sptr->trehs == sptr->trehc)
+    if (sptr->vol != 0 && sptr->tred != 0 && sptr->trehs == sptr->trehc)
     {
-        sptr->trec +=
-            (unsigned)(sptr->trecad * (char)sptr->tmpd) >> 8;
+        sptr->trec += (sptr->trecad * (sptr->tmpd & 0xff)) >> 8;
 
         if (sptr->trec < 0)
         {
@@ -756,7 +752,8 @@ void note_cntl(void)
     if (sptr->vibd != 0 && sptr->vibhs == sptr->vibhc)
     {
         sptr->vib_tmp_cnt += sptr->vibcad;
-        if ((unsigned)sptr->vib_tmp_cnt >= 256)
+
+        if (sptr->vib_tmp_cnt > 255)
         {
             sptr->vib_tmp_cnt &= 0xFF;
             frq_data += vib_compute();
@@ -806,13 +803,13 @@ void tempo_ch(void)
     {
         if (!--sptr->tmpc)
         {
-            sptr->tmpw = (unsigned char)sptr->tmpm << 8;
+            sptr->tmpw = sptr->tmpm << 8;
         }
         else
         {
             sptr->tmpw += sptr->tmpad;
         }
-        sptr->tmp = (unsigned int)sptr->tmpw >> 8;
+        sptr->tmp = sptr->tmpw >> 8;
     }
 }
 

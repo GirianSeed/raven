@@ -262,8 +262,7 @@ void vol_set(unsigned int vol)
 {
     unsigned int pan;
 
-    if ((mtrack < 13) ||
-         (se_playing[mtrack - 13].kind == 0))
+    if ((mtrack < 13) || (se_playing[mtrack - 13].kind == 0))
     {
         if (vol >= sptr->dec_vol)
         {
@@ -330,7 +329,7 @@ void freq_set(unsigned int base)
     int           freq;
     unsigned int *ptr;
 
-    base += (signed char)sptr->micro;
+    base += sptr->micro;
     temp4 = base;
     temp3 = (base >> 8) + sptr->macro;
     temp3 &= 0x7F;

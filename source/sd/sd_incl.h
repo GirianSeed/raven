@@ -60,11 +60,16 @@ typedef struct SEPLAYTBL
 
 typedef struct SOUND_W
 {
+    /* command stream pointer */
     unsigned char *mpointer;
+
+    /* note */
     unsigned char  ngc;
     unsigned char  ngo;
     unsigned char  ngs;
     unsigned char  ngg;
+
+    /* loop */
     unsigned char  lp1_cnt;
     unsigned char  lp2_cnt;
     int            lp1_vol;
@@ -74,21 +79,29 @@ typedef struct SOUND_W
     unsigned char *lp1_addr;
     unsigned char *lp2_addr;
     unsigned char *lp3_addr;
+
+    /* kakko (?) */
     unsigned char  kakfg;
     unsigned char *kak1ptr;
     unsigned char *kak2ptr;
+
     unsigned char  pvoc;
     int            pvod;
     int            pvoad;
     unsigned int   pvom;
+
+    /* volume */
     unsigned char  vol;
-    char           panc;
+
+    /* pan */
+    unsigned char  panc;
     int            pand;
     int            panad;
     int            panm;
-    char           panf;
+    unsigned char  panf;
     char           panoff;
     char           panmod;
+
     unsigned char  swpc;
     unsigned char  swphc;
     unsigned int   swpd;
@@ -98,6 +111,8 @@ typedef struct SOUND_W
     unsigned char  swshc;
     char           swsk;
     int            swss;
+
+    /* vibrato */
     unsigned char  vibhc;
     unsigned int   vib_tmp_cnt;
     unsigned char  vib_tbl_cnt;
@@ -109,28 +124,45 @@ typedef struct SOUND_W
     unsigned char  vibcs;
     unsigned char  vibcad;
     unsigned int   vibad;
+
+    /* random */
     unsigned int   rdmc;
     unsigned int   rdmo;
     unsigned char  rdms;
     unsigned int   rdmd;
+
+    /* tremolo */
     signed char    trec;
     unsigned char  trehc;
-    char           tred;
+    unsigned char  tred;
     unsigned char  trecad;
     unsigned char  trehs;
+
     unsigned int   snos;
     int            ptps;
+
+    /* decline volume */
     unsigned int   dec_vol;
+
+    /* detune */
     int            tund;
+
+    /* tempo */
     unsigned int   tmpd;
     unsigned char  tmp;
     unsigned int   tmpad;
     unsigned char  tmpc;
     unsigned int   tmpw;
     unsigned char  tmpm;
+
+    /* unused */
     unsigned int   rest_fg;
-    char           macro;
-    char           micro;
+
+    /* tone */
+    unsigned char  macro;
+    signed char    micro;
+
+    /* reset release decay */
     unsigned short rrd;
 } SOUND_W;
 
