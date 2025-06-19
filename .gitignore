@@ -1,0 +1,9 @@
+# -*- mode: gitignore; -*-
+raven
+
+*.o
+*.efx
+*.mdx
+*.wvx
+
+.vscode/
