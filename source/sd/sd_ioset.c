@@ -1,7 +1,7 @@
 #include "sd/sd_ext.h"
 #include "sd/sd_incl.h"
 
-#include "spu/libspu.h"
+#include "spu/spu.h"
 
 static unsigned int pant[41] = {
     0,   2,   4,   7,   10,  13,  16,  20,  24,  28,  32,  36,  40,  45,
@@ -36,100 +36,80 @@ static unsigned int freq_tbl[108] = {
 
 void spuwr(void)
 {
-    SpuVoiceAttr attr;
-
     if (keyoffs)
     {
-        SpuSetKey(SPU_OFF, keyoffs);
+        spu_set_key_off(keyoffs);
         keyoffs = 0;
     }
 
     if (eoffs)
     {
-        SpuSetReverbVoice(SPU_OFF, eoffs);
+        spu_set_reverb_off(eoffs);
         eoffs = 0;
     }
 
     for (int i = 0; i < 21; i++)
     {
-        attr.mask = 0;
-        attr.voice = spu_ch_tbl[i + 1];
-
         if (spu_tr_wk[i].vol_fg)
         {
-            attr.mask |= SPU_VOICE_VOLL | SPU_VOICE_VOLR;
-            attr.volume.left = spu_tr_wk[i].vol_l;
-            attr.volume.right = spu_tr_wk[i].vol_r;
+            spu_set_voice_volume(i, spu_tr_wk[i].vol_l, spu_tr_wk[i].vol_r);
             spu_tr_wk[i].vol_fg = 0;
         }
 
         if (spu_tr_wk[i].pitch_fg)
         {
-            attr.mask |= SPU_VOICE_PITCH;
-            attr.pitch = spu_tr_wk[i].pitch;
+            spu_set_voice_pitch(i, spu_tr_wk[i].pitch);
             spu_tr_wk[i].pitch_fg = 0;
         }
 
         if (spu_tr_wk[i].addr_fg)
         {
-            attr.mask |= SPU_VOICE_WDSA;
-            attr.addr = spu_wave_start_ptr + spu_tr_wk[i].addr;
+            spu_set_voice_address(i, spu_tr_wk[i].addr);
             spu_tr_wk[i].addr_fg = 0;
         }
 
         if (spu_tr_wk[i].env1_fg)
         {
-            attr.mask |= SPU_VOICE_ADSR_AMODE | SPU_VOICE_ADSR_AR | SPU_VOICE_ADSR_DR;
-            attr.a_mode = spu_tr_wk[i].a_mode;
-            attr.ar = spu_tr_wk[i].ar;
-            attr.dr = spu_tr_wk[i].dr;
+            spu_set_voice_attack(i, spu_tr_wk[i].a_mode, spu_tr_wk[i].ar);
+            spu_set_voice_decay(i, spu_tr_wk[i].dr);
             spu_tr_wk[i].env1_fg = 0;
         }
 
         if (spu_tr_wk[i].env2_fg)
         {
-            attr.mask |= SPU_VOICE_ADSR_SMODE | SPU_VOICE_ADSR_SR | SPU_VOICE_ADSR_SL;
-            attr.s_mode = spu_tr_wk[i].s_mode;
-            attr.sr = spu_tr_wk[i].sr;
-            attr.sl = spu_tr_wk[i].sl;
+            spu_set_voice_sustain(i, spu_tr_wk[i].s_mode, spu_tr_wk[i].sr, spu_tr_wk[i].sl);
             spu_tr_wk[i].env2_fg = 0;
         }
 
         if (spu_tr_wk[i].env3_fg)
         {
-            attr.mask |= SPU_VOICE_ADSR_RMODE | SPU_VOICE_ADSR_RR;
-            attr.r_mode = spu_tr_wk[i].r_mode;
-            attr.rr = spu_tr_wk[i].rr;
+            spu_set_voice_release(i, spu_tr_wk[i].r_mode, spu_tr_wk[i].rr);
             spu_tr_wk[i].env3_fg = 0;
-        }
-
-        if (attr.mask)
-        {
-            SpuSetVoiceAttr(&attr);
         }
     }
 
     if (eons)
     {
-        SpuSetReverbVoice(SPU_ON, eons);
+        spu_set_reverb_on(eons);
         eons = 0;
     }
 
     if (keyons)
     {
-        SpuSetKey(SPU_ON, keyons);
+        spu_set_key_off(keyons);
         keyons = 0;
     }
 }
 
 void sound_off(void)
 {
-    for (int i = 0; i < 23; i++)
+    for (int i = 0; i < 21; i++)
     {
+        spu_tr_wk[i].r_mode = SPU_ADSR_LIN_DEC;
         spu_tr_wk[i].rr = 7;
         spu_tr_wk[i].env3_fg = 1;
 
-        song_end |= spu_ch_tbl[mtrack + 1];
+        song_end |= 1 << mtrack;
     }
 
     keyoffs = 0x7FFFFF;
@@ -139,6 +119,7 @@ void sng_off(void)
 {
     for (int i = 0; i < 13; i++)
     {
+        spu_tr_wk[i].r_mode = SPU_ADSR_LIN_DEC;
         spu_tr_wk[i].rr = 7;
         spu_tr_wk[i].env3_fg = 1;
     }
@@ -149,30 +130,22 @@ void sng_off(void)
 
 void se_off(int i)
 {
-    spu_tr_wk[i + 13].env3_fg = 1;
+    spu_tr_wk[i + 13].r_mode = SPU_ADSR_LIN_DEC;
     spu_tr_wk[i + 13].rr = 0;
+    spu_tr_wk[i + 13].env3_fg = 1;
+
     song_end |= 1 << (i + 13);
     keyoffs |= 1 << (i + 13);
 }
 
 void sng_pause(void)
 {
-    SpuCommonAttr attr;
-
-    attr.mask = SPU_COMMON_MVOLL | SPU_COMMON_MVOLR;
-    attr.mvol.left = 0;
-    attr.mvol.right = 0;
-    SpuSetCommonAttr(&attr);
+    spu_set_master_volume(0, 0);
 }
 
 void sng_pause_off(void)
 {
-    SpuCommonAttr attr;
-
-    attr.mask = SPU_COMMON_MVOLL | SPU_COMMON_MVOLR;
-    attr.mvol.left = 0x3FFF;
-    attr.mvol.right = 0x3FFF;
-    SpuSetCommonAttr(&attr);
+    spu_set_master_volume(0x3fff, 0x3fff);
 }
 
 void keyon(void)
@@ -195,11 +168,11 @@ void tone_set(unsigned char num)
 
     if (voice_tbl[num].a_mode)
     {
-        spu_tr_wk[mtrack].a_mode = 5;
+        spu_tr_wk[mtrack].a_mode = SPU_ADSR_EXP_INC;
     }
     else
     {
-        spu_tr_wk[mtrack].a_mode = 1;
+        spu_tr_wk[mtrack].a_mode = SPU_ADSR_LIN_INC;
     }
 
     spu_tr_wk[mtrack].ar = ~voice_tbl[num].ar & 0x7F;
@@ -209,19 +182,19 @@ void tone_set(unsigned char num)
     switch (voice_tbl[num].s_mode)
     {
     case 0:
-        spu_tr_wk[mtrack].s_mode = 3;
+        spu_tr_wk[mtrack].s_mode = SPU_ADSR_LIN_DEC;
         break;
 
     case 1:
-        spu_tr_wk[mtrack].s_mode = 7;
+        spu_tr_wk[mtrack].s_mode = SPU_ADSR_EXP_DEC;
         break;
 
     case 2:
-        spu_tr_wk[mtrack].s_mode = 1;
+        spu_tr_wk[mtrack].s_mode = SPU_ADSR_LIN_INC;
         break;
 
     default:
-        spu_tr_wk[mtrack].s_mode = 5;
+        spu_tr_wk[mtrack].s_mode = SPU_ADSR_EXP_INC;
         break;
     }
 
@@ -231,11 +204,11 @@ void tone_set(unsigned char num)
 
     if (!voice_tbl[num].r_mode)
     {
-        spu_tr_wk[mtrack].r_mode = 3;
+        spu_tr_wk[mtrack].r_mode = SPU_ADSR_LIN_DEC;
     }
     else
     {
-        spu_tr_wk[mtrack].r_mode = 7;
+        spu_tr_wk[mtrack].r_mode = SPU_ADSR_EXP_DEC;
     }
 
     spu_tr_wk[mtrack].rr = sptr->rrd = ~voice_tbl[num].rr & 0x1F;

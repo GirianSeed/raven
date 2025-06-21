@@ -2,6 +2,7 @@
 #include "sd/sd_incl.h"
 
 #include <assert.h>
+#include <stdio.h>
 
 static unsigned int key_fg;
 
@@ -241,6 +242,11 @@ int tx_read(void)
 
         if (mdata1 >= 128)
         {
+            if (mtrack == 0)
+            {
+                SD_PRINT("%lx: cmd = %x\n", mptr - sng_data, mdata1 - 128);
+            }
+
             cntl_tbl[mdata1 - 128]();
             if (mdata1 == 0xF2 || mdata1 == 0xF3 || mdata1 == 0xFF)
             {
@@ -258,6 +264,7 @@ int tx_read(void)
             {
                 key_fg = 1;
             }
+
             read_fg = 0;
             sptr->rest_fg = 0;
             note_set();

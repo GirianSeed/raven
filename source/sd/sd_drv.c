@@ -47,7 +47,7 @@ WAVE_W         voice_tbl[256];
 unsigned char *mptr;
 int            se_rev_on;
 SOUND_W       *sptr;
-SPU_TRACK_REG  spu_tr_wk[23];
+SPU_TRACK_REG  spu_tr_wk[21];
 int            sng_kaihi_fadein_time;
 int            sng_master_vol[13];
 
@@ -61,7 +61,7 @@ void IntSdMain(void)
         code = sd_sng_code_buf[sd_code_read];
         sd_sng_code_buf[sd_code_read] = 0;
         sd_code_read = (sd_code_read + 1) & 0xF;
-        printf("SngCode=%x\n", code);
+        SD_PRINT("SngCode=%x\n", code);
     }
     else
     {
@@ -77,14 +77,14 @@ void IntSdMain(void)
     case 0x01FFFF01:
         sng_pause_fg = 1;
         sng_pause();
-        printf("SongPauseOn\n");
+        SD_PRINT("SongPauseOn\n");
         break;
 
     // Unpause
     case 0x01FFFF02:
         sng_pause_off();
         sng_pause_fg = 0;
-        printf("SongPauseOff\n");
+        SD_PRINT("SongPauseOff\n");
         break;
 
     // Fade in
@@ -108,7 +108,7 @@ void IntSdMain(void)
             sng_kaihi_fadein_time = 0;
         }
 
-        printf("SongFadein\n");
+        SD_PRINT("SongFadein\n");
         break;
 
     // Fade out
@@ -117,7 +117,7 @@ void IntSdMain(void)
     case 0x01FFFF08: /* fallthrough */
     case 0x01FFFF09:
         SngFadeOutP(code);
-        printf("SongFadeout&Pause\n");
+        SD_PRINT("SongFadeout&Pause\n");
         break;
 
     // Fade out and stop
@@ -126,31 +126,31 @@ void IntSdMain(void)
     case 0x01FFFF0C: /* fallthrough */
     case 0x01FFFF0D:
         SngFadeOutS(code);
-        printf("SongFadeout&Stop\n");
+        SD_PRINT("SongFadeout&Stop\n");
         break;
 
     // Evasion Mode
     case 0x01FFFF10:
         SngKaihiP();
-        printf("SongKaihiMode\n");
+        SD_PRINT("SongKaihiMode\n");
         break;
 
     // First Person Mode
     case 0x01FFFF20:
         sng_syukan_fg = 1;
-        printf("SongSyukanMode On\n");
+        SD_PRINT("SongSyukanMode On\n");
         break;
 
     // Exit first person
     case 0x01FFFF21:
         sng_syukan_fg = 0;
-        printf("SongSyukanMode Off\n");
+        SD_PRINT("SongSyukanMode Off\n");
         break;
 
     case 0x01FFFFFF:
         sng_play_code = 0;
         sng_off();
-        printf("SongStop\n");
+        SD_PRINT("SongStop\n");
         break;
 
     case 0x01000001: /* fallthrough */
@@ -163,20 +163,20 @@ void IntSdMain(void)
     case 0x01000008:
         if (sng_play_code == code)
         {
-            printf("SameSongHasAlreadyPlayed\n");
+            SD_PRINT("SameSongHasAlreadyPlayed\n");
             break;
         }
 
         if (sng_status < 2)
         {
-            printf("sng_status=%x\n", sng_status);
+            SD_PRINT("sng_status=%x\n", sng_status);
             break;
         }
 
         n_songs = sng_data[0];
         if ((code & 0xF) > n_songs)
         {
-            printf("ERROR:SNG PLAY CODE(%x/%x)\n", code, n_songs);
+            SD_PRINT("ERROR:SNG PLAY CODE(%x/%x)\n", code & 0xF, n_songs);
             break;
         }
 
@@ -202,7 +202,7 @@ void IntSdMain(void)
         break;
 
     default:
-        printf("ERROR:UNK SNG PLAY CODE(%x)\n", code);
+        SD_PRINT("ERROR:UNK SNG PLAY CODE(%x)\n", code);
         break;
     }
 
@@ -223,11 +223,11 @@ void IntSdMain(void)
         case 3:
             if ((dword_800BEFF8 != 0) && ((dword_800BEFF8 & 0x1FFF) != (song_end & 0x1FFF)))
             {
-                printf("*** SOUND WORK IS BROKEN !!! ***\n");
-                printf("*** SOUND WORK IS BROKEN !!! ***\n");
-                printf("*** song_end:%x -> %x        ***\n", song_end & 0x1FFF, dword_800BEFF8 & 0x1FFF);
-                printf("*** SOUND WORK IS BROKEN !!! ***\n");
-                printf("*** SOUND WORK IS BROKEN !!! ***\n");
+                SD_PRINT("*** SOUND WORK IS BROKEN !!! ***\n");
+                SD_PRINT("*** SOUND WORK IS BROKEN !!! ***\n");
+                SD_PRINT("*** song_end:%x -> %x        ***\n", song_end & 0x1FFF, dword_800BEFF8 & 0x1FFF);
+                SD_PRINT("*** SOUND WORK IS BROKEN !!! ***\n");
+                SD_PRINT("*** SOUND WORK IS BROKEN !!! ***\n");
             }
 
             SngFadeInt();
@@ -235,7 +235,7 @@ void IntSdMain(void)
 
             for (mtrack = 0; mtrack < 13; mtrack++)
             {
-                keyd = spu_ch_tbl[mtrack + 1];
+                keyd = 1 << mtrack;
 
                 if ((song_end & keyd) == 0)
                 {
@@ -280,14 +280,14 @@ void IntSdMain(void)
 
     for (mtrack = 13; mtrack < 21; mtrack++)
     {
-        if (se_tracks < 2 && se_request[mtrack - 13].code)
+        if (se_tracks < 2 && se_request[mtrack - 13].code != 0)
         {
             se_off(mtrack - 13);
             se_adrs_set(mtrack - 13);
             continue;
         }
 
-        keyd = spu_ch_tbl[mtrack + 1];
+        keyd = 1 << mtrack;
 
         if ((song_end & keyd) == 0)
         {
@@ -420,11 +420,11 @@ int SngFadeOutS(unsigned int code)
         sng_fadein_time = 0;
         sng_play_code = 0xFFFFFFFF;
 
-        printf("SNG FADEOUT START(status=%x)\n", sng_status);
+        SD_PRINT("SNG FADEOUT START(status=%x)\n", sng_status);
         return 0;
     }
 
-    printf("SNG FADEOUT CANCELED(status=%x)\n", sng_status);
+    SD_PRINT("SNG FADEOUT CANCELED(status=%x)\n", sng_status);
     return -1;
 }
 
@@ -747,11 +747,11 @@ void se_adrs_set(int num)
     {
         if (se_rev_on)
         {
-            eons |= spu_ch_tbl[mtrack + 1];
+            eons |= 1 << mtrack;
         }
         else
         {
-            eoffs |= spu_ch_tbl[mtrack + 1];
+            eoffs |= 1 << mtrack;
         }
     }
 }

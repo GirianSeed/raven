@@ -2,11 +2,11 @@
 .PHONY: all clean
 
 TARGET      = raven
-SRCS        = source/raven.c
+SRCS        = source/raven.c source/cbuf.c
 OBJS        = $(SRCS:.c=.o)
 
-# add libspu sources
-SRCS        += source/spu/libspu.c
+# add spu sources
+SRCS        += source/spu/spu.c
 
 # add libsd sources
 SRCS        += source/sd/sd_cli.c
@@ -19,7 +19,7 @@ SRCS        += source/sd/sd_sub2.c
 SRCS        += source/sd/sd_wk.c
 SRCS        += source/sd/se_tbl.c
 
-CFLAGS      = --std=gnu99 -O2 -Wall -Wextra -Isource
+CFLAGS      = --std=gnu99 -g -O2 -Wall -Wextra -Isource
 
 all: $(TARGET)
 

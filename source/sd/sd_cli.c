@@ -6,7 +6,6 @@
 #include <stdio.h>
 
 static int bgm_idx;
-static int sd_print_fg;
 
 int sd_sng_play(void)
 {
@@ -168,10 +167,7 @@ static void sd_set(unsigned int sound_code)
 {
     unsigned int mode;
 
-    if (sd_print_fg != 0)
-    {
-        printf("SdCode=%x\n", sound_code);
-    }
+    SD_PRINT("SdCode=%x\n", sound_code);
 
     mode = sound_code & 0xFF000000;
     if (mode == 0)
@@ -190,7 +186,7 @@ static void sd_set(unsigned int sound_code)
             return;
         }
 
-        printf("***TooMuchBGMSoundCode(%x)***\n", sound_code);
+        SD_PRINT("***TooMuchBGMSoundCode(%x)***\n", sound_code);
     }
     else
     {
@@ -216,7 +212,7 @@ static void sd_set(unsigned int sound_code)
             return;
         }
 
-        printf("sd_set:unknown code (code=%x)\n", sound_code);
+        SD_PRINT("sd_set:unknown code (code=%x)\n", sound_code);
     }
 }
 
@@ -224,7 +220,7 @@ int sd_set_cli(int sound_code, int sync_mode)
 {
     if (sync_mode != SD_ASYNC)
     {
-        printf("sd_set_cli:unsupported sync_mode\n");
+        SD_PRINT("sd_set_cli:unsupported sync_mode\n");
         return 1;
     }
 

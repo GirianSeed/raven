@@ -3,17 +3,56 @@
 
 // Do not #include this file externally! Use sd_cli.h instead.
 
-#include "sd_incl.h"
+#include "sd/sd_incl.h"
+
+#include "spu/spu.h"
+
+#define SD_BGM_VOICES 13
+#define SD_SE_VOICES  8
+#define SD_N_VOICES   (SD_BGM_VOICES + SD_SE_VOICES)
+
+#define SD_BGM_0      0
+#define SD_BGM_1      1
+#define SD_BGM_2      2
+#define SD_BGM_3      3
+#define SD_BGM_4      4
+#define SD_BGM_5      5
+#define SD_BGM_6      6
+#define SD_BGM_7      7
+#define SD_BGM_8      8
+#define SD_BGM_9      9
+#define SD_BGM_10     10
+#define SD_BGM_11     11
+#define SD_BGM_12     12
+#define SD_BGM_END    (SD_BGM12 + 1)
+
+#define SD_SE_0       13
+#define SD_SE_1       14
+#define SD_SE_2       15
+#define SD_SE_3       16
+#define SD_SE_4       17
+#define SD_SE_5       18
+#define SD_SE_6       19
+#define SD_SE_7       20
+#define SD_SE_END     (SD_SE7 + 1)
+
+#define SD_PRINT(...)        \
+({                           \
+    if (sd_debug_mode)       \
+    {                        \
+        printf(__VA_ARGS__); \
+    }                        \
+})
 
 /* sd_main.c */
-void sd_init(int debug);
+void sd_init(int debug, int loop);
 void sd_term(void);
 void sd_tick(void);
 
 /* sd_file.c */
-int sd_sng_data_load(char *name);
-int sd_se_data_load(char *name);
-int sd_wav_data_load(char *name);
+int sd_sng_data_load(const char *name);
+int sd_se_data_load(const char *name);
+int sd_wav_data_load(const char *name);
 
 /* sd_drv.c */
 void IntSdMain(void);
@@ -114,24 +153,25 @@ int sd_sng_code(void);
 extern SETBL se_tbl[128];
 
 /* in sd_wk.c */
-extern unsigned int  spu_ch_tbl[24+1];
+/* TODO: move globals here*/
 
 /*---------------------------------------------------------------------------*/
 extern  int            sd_debug_mode;
+extern  int            sd_loop_mode;
 extern  int            se_tracks;
 extern  int            sd_sng_code_buf[16];
 extern  int            eons;
-extern  SEPLAYTBL      se_playing[8];
+extern  SEPLAYTBL      se_playing[SD_SE_VOICES];
 extern  unsigned int   mdata1;
 extern  unsigned int   mdata2;
 extern  unsigned int   mdata3;
 extern  unsigned int   mdata4;
-extern  SEPLAYTBL      se_request[8];
+extern  SEPLAYTBL      se_request[SD_SE_VOICES];
 extern  int            sng_status;
 extern  int            stop_jouchuu_se;
-extern  int            se_pan[8];
+extern  int            se_pan[SD_SE_VOICES];
 extern  unsigned int   mtrack;
-extern  int            se_vol[8];
+extern  int            se_vol[SD_SE_VOICES];
 extern  int            eoffs;
 extern  unsigned int   keyons;
 extern  SETBL          se_header[512];
@@ -147,8 +187,8 @@ extern  WAVE_W         voice_tbl[256];
 extern  unsigned char *mptr;
 extern  int            se_rev_on;
 extern  SOUND_W       *sptr;
-extern  SPU_TRACK_REG  spu_tr_wk[23];
+extern  SPU_TRACK_REG  spu_tr_wk[SD_N_VOICES];
 extern  int            sng_kaihi_fadein_time;
-extern  int            sng_master_vol[13];
+extern  int            sng_master_vol[SD_BGM_VOICES];
 
 #endif // _SD_EXT_H_

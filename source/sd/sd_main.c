@@ -1,37 +1,21 @@
 #include "sd/sd_ext.h"
 #include "sd/sd_incl.h"
 
-#include "spu/libspu.h"
+#include "spu/spu.h"
 
 #include <stdio.h>
 
 int sd_debug_mode;
-
-static void sd_init_voice(void)
-{
-    SpuSetPitchLFOVoice(SPU_OFF, SPU_ALLCH);
-    SpuSetNoiseVoice(SPU_OFF, SPU_ALLCH);
-}
+int sd_loop_mode;
 
 static void sd_init_reverb(void)
 {
-    SpuReverbAttr attr;
-
-    SpuSetReverb(SPU_OFF);
-    SpuReserveReverbWorkArea(SPU_ON);
-    SpuClearReverbWorkArea(SPU_REV_MODE_STUDIO_C);
-
-    attr.mask = SPU_REV_MODE;
-    attr.mode = SPU_REV_MODE_STUDIO_C;
-    SpuSetReverbModeParam(&attr);
-
-    attr.mask = SPU_REV_DEPTHL | SPU_REV_DEPTHR;
-    attr.depth.left = 0x4000;
-    attr.depth.right = 0x4000;
-    SpuSetReverbDepth(&attr);
-
-    SpuSetReverb(SPU_ON);
-    SpuSetReverbVoice(SPU_ON, SPU_13CH - 1);
+    spu_set_reverb_enable(0);
+    spu_reverb_clear();
+    spu_set_reverb_mode(SPU_REV_MODE_STUDIO_C);
+    spu_set_reverb_depth(0x4000, 0x4000);
+    spu_set_reverb_enable(1);
+    spu_set_reverb_on(0x1fff);
 
     eoffs = 0;
     eons = 0x1FFF;
@@ -39,24 +23,18 @@ static void sd_init_reverb(void)
 
 static void sd_init_volume(void)
 {
-    SpuCommonAttr attr;
-
-    attr.mask = SPU_COMMON_MVOLL | SPU_COMMON_MVOLR;
-    attr.mvol.left = 0x3FFF;
-    attr.mvol.right = 0x3FFF;
-    SpuSetCommonAttr(&attr);
+    spu_set_master_volume(0x3fff, 0x3fff);
 }
 
-void sd_init(int debug)
+void sd_init(int debug, int loop)
 {
     sd_debug_mode = debug;
+    sd_loop_mode = loop;
 
-    SpuInit();
+    SD_PRINT("SD:START\n");
 
-    spu_wave_start_ptr = SpuMalloc(0x73E00);
-    printf("spu_wave_start_ptr=%x\n", spu_wave_start_ptr);
+    spu_init();
 
-    sd_init_voice();
     sd_init_reverb();
     sd_init_volume();
 
@@ -70,8 +48,10 @@ void sd_init(int debug)
 
 void sd_term(void)
 {
-    SpuSetKey(SPU_OFF, SPU_ALLCH);
-    SpuQuit();
+    spu_set_key_off(0xffffff);
+    spu_quit();
+
+    SD_PRINT("SD:TERM\n");
 }
 
 void sd_tick(void)

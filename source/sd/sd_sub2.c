@@ -196,7 +196,7 @@ void l3s_set(void)
 
 void l3e_set(void)
 {
-    if (sptr->lp3_addr)
+    if (sd_loop_mode && sptr->lp3_addr)
     {
         mptr = sptr->lp3_addr;
     }
@@ -340,7 +340,7 @@ void eon_set(void)
 {
     if (mtrack > 12 && mtrack < 21 && se_playing[mtrack - 13].kind == 0)
     {
-        eons |= spu_ch_tbl[mtrack + 1];
+        eons |= 1 << mtrack;
     }
 }
 
@@ -348,7 +348,7 @@ void eof_set(void)
 {
     if (mtrack > 12 && mtrack < 21 && se_playing[mtrack - 13].kind == 0)
     {
-        eoffs |= spu_ch_tbl[mtrack + 1];
+        eoffs |= 1 << mtrack;
     }
 }
 
@@ -386,7 +386,7 @@ void env_set(void)
 
 void ads_set(void)
 {
-    spu_tr_wk[mtrack].a_mode = 1;
+    spu_tr_wk[mtrack].a_mode = SPU_ADSR_LIN_INC;
     spu_tr_wk[mtrack].ar = ~mdata2 & 0x7F;
     spu_tr_wk[mtrack].dr = ~mdata3 & 0xF;
     spu_tr_wk[mtrack].sl = mdata4 & 0xF;
@@ -395,14 +395,14 @@ void ads_set(void)
 
 void srs_set(void)
 {
-    spu_tr_wk[mtrack].s_mode = 3;
+    spu_tr_wk[mtrack].s_mode = SPU_ADSR_LIN_DEC;
     spu_tr_wk[mtrack].sr = ~mdata2 & 0x7F;
     spu_tr_wk[mtrack].env2_fg = 1;
 }
 
 void rrs_set(void)
 {
-    spu_tr_wk[mtrack].r_mode = 3;
+    spu_tr_wk[mtrack].r_mode = SPU_ADSR_LIN_DEC;
     spu_tr_wk[mtrack].rr = ~mdata2 & 0x1F;
     spu_tr_wk[mtrack].env3_fg = 1;
 
