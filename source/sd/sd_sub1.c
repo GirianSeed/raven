@@ -632,7 +632,7 @@ void keych(void)
         }
     }
 
-    rdm = random();
+    rdm = random_gen();
     if (rdm != 0)
     {
         vib += rdm;
@@ -768,7 +768,7 @@ void note_cntl(void)
         }
     }
 
-    rdm_data = random();
+    rdm_data = random_gen();
 
     if (rdm_data != 0)
     {
@@ -782,7 +782,7 @@ void note_cntl(void)
     }
 }
 
-unsigned int random(void)
+unsigned int random_gen(void)
 {
     unsigned int val = 0;
 

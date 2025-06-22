@@ -2,7 +2,7 @@
 .PHONY: all clean
 
 TARGET      = raven
-SRCS        = source/raven.c source/cbuf.c
+SRCS        = source/raven.c source/cbuf.c source/vector.c source/wave.c
 OBJS        = $(SRCS:.c=.o)
 
 # add spu sources

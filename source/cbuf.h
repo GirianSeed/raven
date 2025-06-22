@@ -3,7 +3,8 @@
 
 #include <stddef.h>
 
-typedef struct cbuf {
+typedef struct cbuf
+{
     char *buf;
     size_t rd, wr;
     size_t size;

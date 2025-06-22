@@ -11,7 +11,8 @@ enum {
     SPU_STEP_RELEASE,
 };
 
-typedef struct {
+typedef struct spu_voice
+{
     short voll, volr;   /* volume left/right */
     unsigned short pitch;
     unsigned short ssa; /* sound start address */
@@ -40,6 +41,8 @@ static unsigned int rsize; /* reverb work area size */
 static reverb_attr rattr;  /* reverb attributes */
 
 static spu_voice voice[SPU_NCH];
+
+static unsigned short waveform_data[262144];
 static unsigned short reverb_work_area[49184]; /* based on max size */
 
 void spu_init(void)
@@ -115,6 +118,13 @@ void spu_set_reverb_off(unsigned int mask)
 void spu_reverb_clear(void)
 {
     memset(reverb_work_area, 0, sizeof(reverb_work_area));
+}
+
+void spu_write(unsigned int addr, char *ptr, unsigned int size)
+{
+    addr = (addr + 0x7) & ~0x7;
+    size = (size + 0x3f) & ~0x3f;
+    memcpy((char *)waveform_data + addr, ptr, size);
 }
 
 void spu_set_voice_volume(int num, unsigned short l, unsigned short r)

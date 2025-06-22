@@ -1,6 +1,13 @@
 #ifndef _SD_INCL_H_
 #define _SD_INCL_H_
 
+typedef struct WAVE_H
+{
+    unsigned int   offset;
+    unsigned int   size;
+    char           unused[8];
+} WAVE_H;
+
 typedef struct WAVE_W
 {
     unsigned int   addr;

@@ -32,6 +32,8 @@ void spu_set_reverb_off(unsigned int mask);
 
 void spu_reverb_clear(void);
 
+void spu_write(unsigned int addr, char *ptr, unsigned int size);
+
 void spu_set_voice_volume(int voice, unsigned short l, unsigned short r);
 void spu_set_voice_pitch(int voice, unsigned short pitch);
 void spu_set_voice_address(int voice, unsigned int addr);

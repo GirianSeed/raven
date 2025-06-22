@@ -1,4 +1,6 @@
-#include "cbuf.h"
+#include "vector.h"
+#include "wave.h"
+
 #include "sd/sd_cli.h"
 
 #include <stdio.h>
@@ -10,7 +12,7 @@
 
 int main(int argc, char **argv)
 {
-    cbuf audio_buf;
+    vector samples;
 
     const char *mdx = NULL;
     const char *wvx = NULL;
@@ -73,15 +75,15 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    if (cbuf_init(&audio_buf, BUFFER_SIZE_LOG2))
+    if (vector_init(&samples, 0))
     {
-        printf("error: cbuf_init failed!\n");
+        printf("error: vector_init failed!\n");
         return 1;
     }
 
     sd_init(debug, loop);
     sd_sng_data_load(mdx);
-    // sd_wav_data_load(wvx);
+    sd_wav_data_load(wvx);
 
     sd_set_cli(0xFF000006, SD_ASYNC); // stereo
     sd_set_cli(0xFF000006, SD_ASYNC); // reverb
@@ -94,8 +96,13 @@ int main(int argc, char **argv)
     }
     while (sd_sng_play() || sd_se_play());
 
+    if (write_wave_file("output.wav", samples.data, samples.size))
+    {
+        printf("error: failed to write output wave file!\n");
+    }
+
     sd_term();
-    cbuf_term(&audio_buf);
+    vector_term(&samples);
 
     return 0;
 }

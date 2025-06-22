@@ -3,6 +3,9 @@
 
 #include <assert.h>
 #include <stdio.h>
+#include <stdlib.h>
+
+#include <arpa/inet.h>
 
 int sd_sng_data_load(const char *name)
 {
@@ -87,16 +90,75 @@ error:
 int sd_wav_data_load(const char *name)
 {
     FILE *fp;
+    WAVE_H header;
+    size_t rb;
+    char *data;
 
     fp = fopen(name, "rb");
     if (fp == NULL)
     {
+        SD_PRINT("ERROR:could not open wave file %s\n", name);
         return 1;
     }
 
-    // TODO
-    assert(0);
+    /* read wave table header */
+    rb = fread(&header, sizeof(header), 1, fp);
+    if (rb != 1)
+    {
+        SD_PRINT("ERROR:unable to read wave table header\n");
+        goto error;
+    }
 
+    header.offset = htonl(header.offset);
+    header.size = htonl(header.size);
+
+    assert((header.offset % sizeof(header)) == 0);
+    assert((header.size % sizeof(header)) == 0);
+
+    /* read wave table */
+    rb = fread((char *)voice_tbl + header.offset, header.size, 1, fp);
+    if (rb != 1)
+    {
+        SD_PRINT("ERROR:unable to read wave table\n");
+        goto error;
+    }
+
+    /* read wave data header */
+    rb = fread(&header, sizeof(header), 1, fp);
+    if (rb != 1)
+    {
+        SD_PRINT("ERROR:unable to read wave data header\n");
+        goto error;
+    }
+
+    header.offset = htonl(header.offset);
+    header.size = htonl(header.size);
+
+    data = malloc(header.size);
+    if (data == NULL)
+    {
+        SD_PRINT("ERROR:unable to allocate wave data temp\n");
+        goto error;
+    }
+
+    /* read wave data */
+    rb = fread(data, header.size, 1, fp);
+    if (rb != 1)
+    {
+        SD_PRINT("ERROR:unable to read wave data\n");
+        goto error2;
+    }
+
+    spu_write(header.offset, data, header.size);
+
+    free(data);
     fclose(fp);
     return 0;
+
+error2:
+    free(data);
+
+error:
+    fclose(fp);
+    return 1;
 }

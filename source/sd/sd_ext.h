@@ -81,7 +81,7 @@ void keych(void);
 int vib_generate(int cnt);
 void bendch(void);
 void note_cntl(void);
-unsigned int random(void);
+unsigned int random_gen(void);
 void tempo_ch(void);
 void volxset(unsigned char depth);
 

@@ -3,7 +3,8 @@
 
 #include "spu/spu.h"
 
-typedef struct {
+typedef struct reverb_attr
+{
     unsigned short apfd1;
     unsigned short apfd2;
     unsigned short iir;
