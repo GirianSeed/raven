@@ -66,13 +66,13 @@ int sd_se_data_load(const char *name)
     size = ftell(fp);
     fseek(fp, 0, SEEK_SET);
 
-    if (size > sizeof(se_exp_table))
+    if (size > sizeof(se_header))
     {
         SD_PRINT("ERROR:se data size exceeds max %zx\n", size);
         goto error;
     }
 
-    rb = fread(se_exp_table, size, 1, fp);
+    rb = fread(se_header, size, 1, fp);
     if (rb != 1)
     {
         SD_PRINT("ERROR:unable to read se data\n");

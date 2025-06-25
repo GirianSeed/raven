@@ -52,6 +52,9 @@ void sd_init(int debug, int loops)
     {
         se_playing[i].code = 0;
     }
+
+    se_exp_table = (SETBL *)se_header;
+    se_data  = (unsigned char *)(se_exp_table + 128);
 }
 
 void sd_term(void)
