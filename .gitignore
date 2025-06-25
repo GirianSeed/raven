@@ -2,6 +2,8 @@
 raven
 
 *.o
+*.wav
+
 *.efx
 *.mdx
 *.wvx
