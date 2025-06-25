@@ -4,33 +4,33 @@
 #include <stdlib.h>
 #include <string.h>
 
-int vector_init(vector *vector, size_t size)
+int vector_init(vector *vec, size_t size)
 {
-    vector->size = 0;
-    vector->capacity = size;
-    vector->data = malloc(size);
+    vec->size = 0;
+    vec->capacity = size;
+    vec->data = malloc(size);
 
-    return vector->data == NULL;
+    return vec->data == NULL;
 }
 
-void vector_term(vector *vector)
+void vector_term(vector *vec)
 {
-    free(vector->data);
+    free(vec->data);
 }
 
-void vector_push(vector *vector, const char *data, size_t size)
+void vector_push(vector *vec, const void *data, size_t size)
 {
-    if ((vector->size + size) > vector->capacity)
+    if ((vec->size + size) > vec->capacity)
     {
-        vector->capacity = vector->size + size;
-        vector->data = realloc(vector->data, vector->capacity);
+        vec->capacity = vec->size + size;
+        vec->data = realloc(vec->data, vec->capacity);
     }
 
-    memcpy(vector->data + vector->size, data, size);
-    vector->size += size;
+    memcpy(vec->data + vec->size, data, size);
+    vec->size += size;
 }
 
-void vector_clear(vector *vector)
+void vector_clear(vector *vec)
 {
-    vector->size = 0;
+    vec->size = 0;
 }

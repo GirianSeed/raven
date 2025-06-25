@@ -10,11 +10,11 @@ typedef struct vector
     size_t capacity;
 } vector;
 
-int vector_init(vector *vector, size_t size);
-void vector_term(vector *vector);
+int vector_init(vector *vec, size_t size);
+void vector_term(vector *vec);
 
-void vector_push(vector *vector, const char *data, size_t size);
+void vector_push(vector *vec, const void *data, size_t size);
 
-void vector_clear(vector *vector);
+void vector_clear(vector *vec);
 
 #endif /* _VECTOR_H_ */

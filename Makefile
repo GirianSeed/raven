@@ -19,7 +19,7 @@ SRCS        += source/sd/sd_sub2.c
 SRCS        += source/sd/sd_wk.c
 SRCS        += source/sd/se_tbl.c
 
-CFLAGS      = --std=gnu99 -g -O2 -Wall -Wextra -Isource
+CFLAGS      = --std=gnu99 -g -O2 -Wall -Wextra -Wshadow -Isource
 
 all: $(TARGET)
 

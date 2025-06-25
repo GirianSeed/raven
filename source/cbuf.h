@@ -5,7 +5,7 @@
 
 typedef struct cbuf
 {
-    char *buf;
+    char *data;
     size_t rd, wr;
     size_t size;
 } cbuf;
@@ -17,6 +17,6 @@ void cbuf_read(cbuf *buf, char *data, size_t size);
 void cbuf_write(cbuf *buf, const char *data, size_t size);
 
 size_t cbuf_size(cbuf *buf);
-size_t cbuf_avail(cbuf *cbuf);
+size_t cbuf_avail(cbuf *buf);
 
 #endif /* _CBUF_H_ */
