@@ -48,7 +48,6 @@ error:
     return 1;
 }
 
-// TODO: SETBL.addr rely on size(char *) being 4
 int sd_se_data_load(const char *name)
 {
     FILE *fp;

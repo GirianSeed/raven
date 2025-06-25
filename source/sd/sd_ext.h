@@ -176,7 +176,7 @@ extern  int            se_vol[SD_SE_VOICES];
 extern  int            eoffs;
 extern  unsigned int   keyons;
 extern  unsigned char *se_data;
-extern  SETBL         *se_exp_table;
+extern  SETBL2        *se_exp_table;
 extern  unsigned int   keyoffs;
 extern  unsigned char  sng_data[0x4000];
 extern  unsigned int   song_end;

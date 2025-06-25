@@ -56,6 +56,16 @@ typedef struct SETBL
     unsigned char *addr[3];
 } SETBL;
 
+/* This has to be split off from SETBL to avoid relying on 32-bit pointers */
+typedef struct SETBL2
+{
+    unsigned char  pri;
+    unsigned char  tracks;
+    unsigned char  kind;
+    unsigned char  character;
+    unsigned int   addr[3];
+} SETBL2;
+
 typedef struct SEPLAYTBL
 {
     unsigned char  pri;

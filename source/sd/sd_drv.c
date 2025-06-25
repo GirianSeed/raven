@@ -35,7 +35,7 @@ int            se_vol[8];
 int            eoffs;
 unsigned int   keyons;
 unsigned char *se_data;
-SETBL         *se_exp_table;
+SETBL2        *se_exp_table;
 unsigned int   keyoffs;
 unsigned char  sng_data[0x4000];
 unsigned int   song_end;
