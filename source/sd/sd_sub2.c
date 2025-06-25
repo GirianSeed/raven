@@ -72,7 +72,7 @@ void pan_move(void)
     pan = shift - sptr->panf;
     if (pan < 0)
     {
-        sptr->panad = -(((-pan) << 8) /mdata2);
+        sptr->panad = -(((-pan) << 8) / mdata2);
         if (sptr->panad < -2032)
         {
             sptr->panad = -2032;

@@ -105,7 +105,7 @@ void spuwr(void)
 
     if (keyons)
     {
-        spu_set_key_off(keyons);
+        spu_set_key_on(keyons);
         keyons = 0;
     }
 }
