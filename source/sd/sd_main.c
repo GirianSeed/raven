@@ -37,7 +37,7 @@ void sd_init(int debug, int loops)
     }
 
     memset(voice_tbl, 0xff, sizeof(voice_tbl));
-    memset(spu_tr_wk, 0xff, sizeof(spu_tr_wk));
+    memset(spu_tr_wk, 0, sizeof(spu_tr_wk));
 
     SD_PRINT("SD:START\n");
 

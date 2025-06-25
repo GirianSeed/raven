@@ -68,7 +68,6 @@ void spuwr(void)
         {
             if (spu_tr_wk[i].addr == 0xFFFFFFFF)
             {
-                SD_PRINT("track %d missing soundbank!\n", i);
                 keyoffs |= 1 << i;
                 continue;
             }
@@ -169,6 +168,11 @@ void keyoff(void)
 
 void tone_set(unsigned char num)
 {
+    if (voice_tbl[num].addr == 0xFFFFFFFF)
+    {
+        SD_PRINT("track %d missing sample %d!\n", mtrack, num);
+    }
+
     spu_tr_wk[mtrack].addr = voice_tbl[num].addr;
     spu_tr_wk[mtrack].addr_fg = 1;
 
