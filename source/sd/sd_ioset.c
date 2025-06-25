@@ -132,8 +132,8 @@ void sng_off(void)
         spu_tr_wk[i].env3_fg = 1;
     }
 
-    song_end |= 0x1FFF;
-    keyoffs |= 0x1FFF;
+    song_end |= SD_BGM_MASK;
+    keyoffs |= SD_BGM_MASK;
 }
 
 void se_off(int i)

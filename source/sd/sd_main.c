@@ -16,10 +16,10 @@ static void sd_init_reverb(void)
     spu_set_reverb_mode(SPU_REV_MODE_STUDIO_C);
     spu_set_reverb_depth(0x4000, 0x4000);
     spu_set_reverb_enable(1);
-    spu_set_reverb_on(0x1fff);
+    spu_set_reverb_on(SD_BGM_MASK);
 
     eoffs = 0;
-    eons = 0x1FFF;
+    eons = SD_BGM_MASK;
 }
 
 static void sd_init_volume(void)

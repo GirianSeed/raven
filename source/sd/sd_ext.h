@@ -25,6 +25,7 @@
 #define SD_BGM_11     11
 #define SD_BGM_12     12
 #define SD_BGM_END    (SD_BGM_12 + 1)
+#define SD_BGM_MASK   ((1 << SD_BGM_END) - 1)
 
 #define SD_SE_0       13
 #define SD_SE_1       14

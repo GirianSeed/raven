@@ -221,11 +221,11 @@ void IntSdMain(void)
             break;
 
         case 3:
-            if ((dword_800BEFF8 != 0) && ((dword_800BEFF8 & 0x1FFF) != (song_end & 0x1FFF)))
+            if ((dword_800BEFF8 != 0) && ((dword_800BEFF8 & SD_BGM_MASK) != (song_end & SD_BGM_MASK)))
             {
                 SD_PRINT("*** SOUND WORK IS BROKEN !!! ***\n");
                 SD_PRINT("*** SOUND WORK IS BROKEN !!! ***\n");
-                SD_PRINT("*** song_end:%x -> %x        ***\n", song_end & 0x1FFF, dword_800BEFF8 & 0x1FFF);
+                SD_PRINT("*** song_end:%x -> %x        ***\n", song_end & SD_BGM_MASK, dword_800BEFF8 & SD_BGM_MASK);
                 SD_PRINT("*** SOUND WORK IS BROKEN !!! ***\n");
                 SD_PRINT("*** SOUND WORK IS BROKEN !!! ***\n");
             }
@@ -264,7 +264,7 @@ void IntSdMain(void)
 
             dword_800BEFF8 = song_end;
 
-            if ((song_end & 0x1FFF) == 0x1FFF)
+            if ((song_end & SD_BGM_MASK) == SD_BGM_MASK)
             {
                 sng_status = 4;
             }
@@ -354,7 +354,7 @@ int SngFadeOutP(unsigned int code)
 {
     int time = 1;
 
-    if (sng_status && sng_fout_term != 0x1FFF)
+    if (sng_status && sng_fout_term != SD_BGM_MASK)
     {
         switch (code)
         {
@@ -391,7 +391,7 @@ int SngFadeOutS(unsigned int code)
 {
     int time = 1;
 
-    if ((sng_status != 0) && ((sng_fout_term != 0x1FFF) || (sng_fadein_time != 0)))
+    if ((sng_status != 0) && ((sng_fout_term != SD_BGM_MASK) || (sng_fadein_time != 0)))
     {
         switch (code)
         {
@@ -435,7 +435,7 @@ int SngKaihiP(void)
         return -1;
     }
 
-    if (sng_fout_term != 0x1FFF)
+    if (sng_fout_term != SD_BGM_MASK)
     {
         sng_fade_time[2] = 43;
         sng_fade_time[3] = 43;
@@ -536,7 +536,7 @@ void SngFadeInt(void)
                 sng_fade_time[i] = 0;
             }
 
-            if (sng_fout_term == 0x1fff)
+            if (sng_fout_term == SD_BGM_MASK)
             {
                 if (sng_play_code == 0xFFFFFFFF)
                 {
@@ -698,7 +698,7 @@ void sng_adrs_set(int num)
     song_addr  = sng_data[(num & 0xF) * 4 + 1] << 8;
     song_addr += sng_data[(num & 0xF) * 4];
 
-    song_end &= ~0x1fff;
+    song_end &= ~SD_BGM_MASK;
 
     for (int i = 0; i < SD_BGM_VOICES; i++)
     {
@@ -717,7 +717,7 @@ void sng_adrs_set(int num)
         }
     }
 
-    keyons &= ~0x1fff;
+    keyons &= ~SD_BGM_MASK;
 }
 
 void se_adrs_set(int num)
