@@ -11,12 +11,12 @@ static int sng_fout_fg;
 static int sd_code_read;
 static int sng_kaihi_fg;
 static int sng_pause_fg;
-static SOUND_W sound_w[21];
+static SOUND_W sound_w[SD_N_VOICES];
 static int sng_fadein_fg;
-static int sng_fade_time[14];
+static int sng_fade_time[SD_BGM_VOICES];
 static int sng_syukan_fg;
 static int sng_fout_term;
-static int sng_fade_value[13];
+static int sng_fade_value[SD_BGM_VOICES];
 
 int            se_tracks;
 int            sd_sng_code_buf[16];
@@ -49,7 +49,7 @@ int            se_rev_on;
 SOUND_W       *sptr;
 SPU_TRACK_REG  spu_tr_wk[21];
 int            sng_kaihi_fadein_time;
-int            sng_master_vol[13];
+int            sng_master_vol[SD_BGM_VOICES];
 
 void IntSdMain(void)
 {
@@ -183,7 +183,7 @@ void IntSdMain(void)
         sng_status = 2;
         if (sng_play_code == 0xFFFFFFFF)
         {
-            for (int track = 0; track < 13; track++)
+            for (int track = 0; track < SD_BGM_VOICES; track++)
             {
                 sng_fade_time[track] = 0;
                 sng_fade_value[track] = 0;
@@ -233,7 +233,7 @@ void IntSdMain(void)
             SngFadeInt();
             SngTempoInt();
 
-            for (mtrack = 0; mtrack < 13; mtrack++)
+            for (mtrack = 0; mtrack < SD_BGM_VOICES; mtrack++)
             {
                 keyd = 1 << mtrack;
 
@@ -278,12 +278,12 @@ void IntSdMain(void)
 
     }
 
-    for (mtrack = 13; mtrack < 21; mtrack++)
+    for (mtrack = SD_SE_0; mtrack < SD_SE_END; mtrack++)
     {
-        if (se_tracks < 2 && se_request[mtrack - 13].code != 0)
+        if (se_tracks < 2 && se_request[mtrack - SD_SE_0].code != 0)
         {
-            se_off(mtrack - 13);
-            se_adrs_set(mtrack - 13);
+            se_off(mtrack - SD_SE_0);
+            se_adrs_set(mtrack - SD_SE_0);
             continue;
         }
 
@@ -342,7 +342,7 @@ void SngFadeIn(unsigned int mode)
         sng_fadein_time = 1;
     }
 
-    for (int i = 0; i < 13; i++)
+    for (int i = 0; i < SD_BGM_VOICES; i++)
     {
         sng_fade_time[i] = 0;
     }
@@ -372,7 +372,7 @@ int SngFadeOutP(unsigned int code)
             break;
         }
 
-        for (int i = 0; i < 13; i++)
+        for (int i = 0; i < SD_BGM_VOICES; i++)
         {
             if (!(sng_fout_term & (1 << i)))
             {
@@ -409,7 +409,7 @@ int SngFadeOutS(unsigned int code)
             break;
         }
 
-        for (int i = 0; i < 13; i++)
+        for (int i = 0; i < SD_BGM_VOICES; i++)
         {
             if (!(sng_fout_term & (1 << i)))
             {
@@ -440,7 +440,7 @@ int SngKaihiP(void)
         sng_fade_time[2] = 43;
         sng_fade_time[3] = 43;
 
-        for (int i = 4; i < 13; i++)
+        for (int i = SD_BGM_4; i < SD_BGM_VOICES; i++)
         {
             if (!(sng_fout_term & (1 << i)))
             {
@@ -462,12 +462,12 @@ void SngFadeWkSet(void)
     {
          sng_fadein_time = 0;
 
-        for (int i = 0; i < 13; i++)
+        for (int i = 0; i < SD_BGM_VOICES; i++)
         {
             sng_fade_time[i] = 0;
         }
 
-        for (int i = 0; i < 13; i++)
+        for (int i = 0; i < SD_BGM_VOICES; i++)
         {
             sng_fade_value[i] = 0;
         }
@@ -484,7 +484,7 @@ void SngFadeWkSet(void)
     case 0x01FFFF05:
         SngFadeIn(sng_fadein_fg);
 
-        for (int i = 0; i < 13; i++)
+        for (int i = 0; i < SD_BGM_VOICES; i++)
         {
             sng_fade_value[i] = 65536;
         }
@@ -513,14 +513,14 @@ void SngFadeInt(void)
         return;
     }
 
-    for (int i = 0; i < 13; i++)
+    for (int i = 0; i < SD_BGM_VOICES; i++)
     {
         has_fade_time |= sng_fade_time[i];
     }
 
     if (has_fade_time != 0)
     {
-        for (int i = 0; i < 13; i++)
+        for (int i = 0; i < SD_BGM_VOICES; i++)
         {
             if (sng_fade_time[i] == 0)
             {
@@ -567,7 +567,7 @@ void SngFadeInt(void)
 
         if (sng_fadein_time != 0)
         {
-            for (int i = 0; i < 13; i++)
+            for (int i = 0; i < SD_BGM_VOICES; i++)
             {
                 if (sng_fadein_time >= sng_fade_value[i])
                 {
@@ -622,7 +622,7 @@ void SngFadeInt(void)
         mod = dword_800BF154;
     }
 
-    for (int i = 0; i < 13; i++)
+    for (int i = 0; i < SD_BGM_VOICES; i++)
     {
         vol = 0x10000;
 
@@ -700,7 +700,7 @@ void sng_adrs_set(int num)
 
     song_end &= ~0x1fff;
 
-    for (int i = 0; i < 13; i++)
+    for (int i = 0; i < SD_BGM_VOICES; i++)
     {
         track_addr  = sng_data[song_addr + i * 4 + 2] << 16;
         track_addr += sng_data[song_addr + i * 4 + 1] << 8;
@@ -732,16 +732,16 @@ void se_adrs_set(int num)
     se_request[num].pri       = 0;
     se_request[num].character = 0;
 
-    sng_track_init(&sound_w[num + 13]);
+    sng_track_init(&sound_w[num + SD_SE_0]);
 
     se_vol[num] = (se_playing[num].code & 0x3f00) * 2;
 
-    song_end &= ~(1 << (num + 13));
-    keyons &= ~(1 << (num + 13));
+    song_end &= ~(1 << (num + SD_SE_0));
+    keyons &= ~(1 << (num + SD_SE_0));
     se_pan[num] = ((se_playing[num].code >> 16) + 32) & 0x3f;
-    keyoffs = keyoffs & ~(1 << (num + 13));
+    keyoffs = keyoffs & ~(1 << (num + SD_SE_0));
 
-    sound_w[num + 13].mpointer = se_playing[num].addr;
+    sound_w[num + SD_SE_0].mpointer = se_playing[num].addr;
 
     if (se_playing[num].kind)
     {

@@ -172,7 +172,7 @@ int sound_sub(void)
     key_fg = 0;
     sptr->tmpd += sptr->tmp;
 
-    if (mtrack < 13 && sng_kaihi_fadein_time != 0)
+    if (mtrack < SD_BGM_VOICES && sng_kaihi_fadein_time != 0)
     {
         fade = sng_kaihi_fadein_time >> 5;
 

@@ -126,7 +126,7 @@ void sound_off(void)
 
 void sng_off(void)
 {
-    for (int i = 0; i < 13; i++)
+    for (int i = 0; i < SD_BGM_VOICES; i++)
     {
         spu_tr_wk[i].r_mode = SPU_ADSR_LIN_DEC;
         spu_tr_wk[i].rr = 7;
@@ -139,12 +139,12 @@ void sng_off(void)
 
 void se_off(int i)
 {
-    spu_tr_wk[i + 13].r_mode = SPU_ADSR_LIN_DEC;
-    spu_tr_wk[i + 13].rr = 0;
-    spu_tr_wk[i + 13].env3_fg = 1;
+    spu_tr_wk[i + SD_SE_0].r_mode = SPU_ADSR_LIN_DEC;
+    spu_tr_wk[i + SD_SE_0].rr = 0;
+    spu_tr_wk[i + SD_SE_0].env3_fg = 1;
 
-    song_end |= 1 << (i + 13);
-    keyoffs |= 1 << (i + 13);
+    song_end |= 1 << (i + SD_SE_0);
+    keyoffs |= 1 << (i + SD_SE_0);
 }
 
 void sng_pause(void)
@@ -244,7 +244,7 @@ void vol_set(unsigned int vol)
 {
     unsigned int pan;
 
-    if ((mtrack < 13) || (se_playing[mtrack - 13].kind == 0))
+    if ((mtrack < SD_BGM_VOICES) || (se_playing[mtrack - SD_SE_0].kind == 0))
     {
         if (vol >= sptr->dec_vol)
         {
@@ -267,7 +267,7 @@ void vol_set(unsigned int vol)
             pan = 20;
         }
 
-        if (mtrack < 13)
+        if (mtrack < SD_BGM_VOICES)
         {
             spu_tr_wk[mtrack].vol_r = (vol * pant[pan] * sng_master_vol[mtrack]) >> 16;
             spu_tr_wk[mtrack].vol_l = (vol * pant[40 - pan] * sng_master_vol[mtrack]) >> 16;
@@ -291,8 +291,8 @@ void vol_set(unsigned int vol)
             vol = 0;
         }
 
-        pan = se_pan[mtrack - 13];
-        vol = (vol * se_vol[mtrack - 13]) >> 16;
+        pan = se_pan[mtrack - SD_SE_0];
+        vol = (vol * se_vol[mtrack - SD_SE_0]) >> 16;
 
         if (sound_mono_fg != 0)
         {

@@ -14,7 +14,7 @@ int sd_sng_play(void)
 
 int sd_se_play(void)
 {
-    int bits = song_end >> 13;
+    int bits = song_end >> SD_BGM_VOICES;
     for (int i = 0; i < 8; i++)
     {
         if ((bits & 1) == 0 && se_playing[i].pri != 255)
@@ -33,7 +33,7 @@ static int SePlay(unsigned int sound_code)
     int       index;
     int       pri;
 
-    bits = song_end >> 13;
+    bits = song_end >> SD_BGM_VOICES;
     for (int i = 0; i < 8; i++)
     {
         if ((bits & 1) != 0)

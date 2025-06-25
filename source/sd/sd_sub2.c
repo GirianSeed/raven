@@ -340,7 +340,7 @@ void echo_set2(void)
 
 void eon_set(void)
 {
-    if (mtrack > 12 && mtrack < 21 && se_playing[mtrack - 13].kind == 0)
+    if (mtrack >= SD_SE_0 && mtrack < SD_SE_END && se_playing[mtrack - SD_SE_0].kind == 0)
     {
         eons |= 1 << mtrack;
     }
@@ -348,7 +348,7 @@ void eon_set(void)
 
 void eof_set(void)
 {
-    if (mtrack > 12 && mtrack < 21 && se_playing[mtrack - 13].kind == 0)
+    if (mtrack >= SD_SE_0 && mtrack < SD_SE_END && se_playing[mtrack - SD_SE_0].kind == 0)
     {
         eoffs |= 1 << mtrack;
     }

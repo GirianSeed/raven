@@ -24,7 +24,7 @@
 #define SD_BGM_10     10
 #define SD_BGM_11     11
 #define SD_BGM_12     12
-#define SD_BGM_END    (SD_BGM12 + 1)
+#define SD_BGM_END    (SD_BGM_12 + 1)
 
 #define SD_SE_0       13
 #define SD_SE_1       14
@@ -34,7 +34,7 @@
 #define SD_SE_5       18
 #define SD_SE_6       19
 #define SD_SE_7       20
-#define SD_SE_END     (SD_SE7 + 1)
+#define SD_SE_END     (SD_SE_7 + 1)
 
 #define SD_PRINT(...)        \
 ({                           \
