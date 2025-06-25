@@ -120,7 +120,7 @@ int main(int argc, char **argv)
         sd_tick();
         spu_step(output_samples, &samples);
     }
-    while (sd_sng_play() || sd_se_play() || spu_endx() != SPU_VOICE_MASK);
+    while (sd_sng_play() || sd_se_play());
 
     if (write_wave_file("output.wav", samples.data, samples.size))
     {
