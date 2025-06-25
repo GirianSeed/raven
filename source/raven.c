@@ -2,13 +2,17 @@
 #include "wave.h"
 
 #include "sd/sd_cli.h"
+#include "spu/spu.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#define TICK_SAMPLES     448
-#define BUFFER_SIZE_LOG2 12 // 4KiB, enough for ~9 ticks
+void output_samples(void *userdata, const short *samples, size_t size)
+{
+    vector *samplebuf = userdata;
+    vector_push(samplebuf, samples, size);
+}
 
 int main(int argc, char **argv)
 {
@@ -114,8 +118,9 @@ int main(int argc, char **argv)
     do
     {
         sd_tick();
+        spu_step(output_samples, &samples);
     }
-    while (sd_sng_play() || sd_se_play());
+    while (sd_sng_play() || sd_se_play() || spu_endx() != SPU_VOICE_MASK);
 
     if (write_wave_file("output.wav", samples.data, samples.size))
     {

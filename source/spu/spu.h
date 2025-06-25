@@ -1,7 +1,10 @@
 #ifndef _SPU_H_
 #define _SPU_H_
 
+#include <stddef.h>
+
 #define SPU_NCH               24
+#define SPU_VOICE_MASK        ((1 << SPU_NCH) - 1)
 
 #define SPU_ADSR_LIN_INC      1
 #define SPU_ADSR_LIN_DEC      3
@@ -20,8 +23,16 @@
 #define SPU_REV_MODE_PIPE     9
 #define SPU_REV_MODE_MAX      10
 
+#define SPU_STEP_SIZE         448
+
+typedef void (*spu_output_sample_fn_t)(void *userdata, const short *samples, size_t size);
+
 void spu_init(void);
 void spu_quit(void);
+
+void spu_step(spu_output_sample_fn_t output, void *userdata);
+
+int spu_endx(void);
 
 void spu_set_reverb_enable(int enable);
 void spu_set_reverb_mode(int mode);
