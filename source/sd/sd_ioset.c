@@ -3,6 +3,8 @@
 
 #include "spu/spu.h"
 
+#include <stdio.h>
+
 static unsigned int pant[41] = {
     0,   2,   4,   7,   10,  13,  16,  20,  24,  28,  32,  36,  40,  45,
     50,  55,  60,  65,  70,  75,  80,  84,  88,  92,  96,  100, 104, 107,
@@ -64,6 +66,13 @@ void spuwr(void)
 
         if (spu_tr_wk[i].addr_fg)
         {
+            if (spu_tr_wk[i].addr == 0xFFFFFFFF)
+            {
+                SD_PRINT("track %d missing soundbank!\n", i);
+                keyoffs |= 1 << i;
+                continue;
+            }
+
             spu_set_voice_address(i, spu_tr_wk[i].addr);
             spu_tr_wk[i].addr_fg = 0;
         }

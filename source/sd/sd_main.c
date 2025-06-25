@@ -4,9 +4,10 @@
 #include "spu/spu.h"
 
 #include <stdio.h>
+#include <string.h>
 
 int sd_debug_mode;
-int sd_loop_mode;
+int sng_loop_cnt[SD_BGM_VOICES];
 
 static void sd_init_reverb(void)
 {
@@ -26,10 +27,17 @@ static void sd_init_volume(void)
     spu_set_master_volume(0x3fff, 0x3fff);
 }
 
-void sd_init(int debug, int loop)
+void sd_init(int debug, int loops)
 {
     sd_debug_mode = debug;
-    sd_loop_mode = loop;
+
+    for (int i = 0; i < SD_BGM_VOICES; i++)
+    {
+        sng_loop_cnt[i] = loops;
+    }
+
+    memset(voice_tbl, 0xff, sizeof(voice_tbl));
+    memset(spu_tr_wk, 0xff, sizeof(spu_tr_wk));
 
     SD_PRINT("SD:START\n");
 

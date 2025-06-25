@@ -157,7 +157,7 @@ extern SETBL se_tbl[128];
 
 /*---------------------------------------------------------------------------*/
 extern  int            sd_debug_mode;
-extern  int            sd_loop_mode;
+extern  int            sng_loop_cnt[SD_BGM_VOICES];
 extern  int            se_tracks;
 extern  int            sd_sng_code_buf[16];
 extern  int            eons;

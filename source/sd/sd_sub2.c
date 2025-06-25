@@ -196,7 +196,9 @@ void l3s_set(void)
 
 void l3e_set(void)
 {
-    if (sd_loop_mode && sptr->lp3_addr)
+    sng_loop_cnt[mtrack]--;
+
+    if (sng_loop_cnt[mtrack] > 0 && sptr->lp3_addr)
     {
         mptr = sptr->lp3_addr;
     }
