@@ -5,7 +5,6 @@
 
 #include <assert.h>
 #include <string.h>
-#include <stdio.h>
 
 #define SPU_ADPCM_LOOP_END   0x100
 #define SPU_ADPCM_LOOP       0x200
@@ -16,13 +15,14 @@ enum {
     SPU_STEP_DECAY,
     SPU_STEP_SUSTAIN,
     SPU_STEP_RELEASE,
+    SPU_STEP_OFF,
 };
 
 typedef struct spu_voice
 {
     short voll, volr;   /* volume left/right */
     unsigned short pitch;
-    unsigned short ssa; /* sound start address */
+    unsigned int   ssa; /* sound start address */
     int a_mode;         /* attack mode */
     int ar;             /* attack rate */
     int dr;             /* decay rate */
@@ -36,20 +36,20 @@ typedef struct spu_voice
 
     int env;            /* envelope volume */
     int env_counter;
-    int env_set;
-    int env_step;
-    int env_counter_inc;
+    int env_rate;
     int env_increasing;
+    int env_exponential;
+    int env_step;
+    int env_increment;
 
     int pitch_counter;
 
-    unsigned short addr; /* sample address */
-    unsigned short lsa;  /* loop start address */
+    unsigned int addr; /* sample address */
+    unsigned int lsa;  /* loop start address */
 
-    /* TODO: replace by decoding entire block at once? */
-    /* BUG: samples are skipped for notes with a high pitch (+1 octave or more) */
-    int last_sample_index;
-    short last_sample;
+    short block_samples[28];
+    unsigned short block_header;
+    int has_block;
 
     short adpcm_hist[2];
     short interp_hist[3];
@@ -152,6 +152,149 @@ static short interp_table[] =
     0x5997, 0x599e, 0x59a4, 0x59a9, 0x59ad, 0x59b0, 0x59b2, 0x59b3,
 };
 
+static void spu_set_adsr(spu_voice *voice)
+{
+    int rate;
+
+    // TODO: clamping is apparently disabled when rate != max, but breaks drums
+    // int clamp;
+
+    int increasing;
+    int exponential;
+    int step;
+    int increment;
+
+    switch (voice->step)
+    {
+    case SPU_STEP_ATTACK:
+        rate = voice->ar;
+        // clamp = voice->ar != 0x7f;
+        increasing = 1;
+        exponential = voice->a_mode == SPU_ADSR_EXP_INC;
+        break;
+
+    case SPU_STEP_DECAY:
+        rate = voice->dr << 2;
+        // clamp = voice->dr != 0xf;
+        increasing = 0;
+        exponential = 1;
+        break;
+
+    case SPU_STEP_SUSTAIN:
+        rate = voice->sr;
+        // clamp = voice->sr != 0x7f;
+        increasing = voice->s_mode == SPU_ADSR_LIN_INC || voice->s_mode == SPU_ADSR_EXP_INC;
+        exponential = voice->s_mode == SPU_ADSR_EXP_INC || voice->s_mode == SPU_ADSR_EXP_DEC;
+        break;
+
+    case SPU_STEP_RELEASE:
+    case SPU_STEP_OFF:
+        rate = voice->rr << 2;
+        // clamp = voice->rr != 0x1f;
+        increasing = 0;
+        exponential = voice->r_mode == SPU_ADSR_EXP_DEC;
+        break;
+
+    default:
+        assert(0); /* unreachable */
+        break;
+    }
+
+    step = 7 - (rate & 0x3);
+    step = increasing ? step : ~step;
+
+    increment = 0x8000;
+
+    if (rate < 44)
+    {
+        step <<= 11 - (rate >> 2);
+    }
+    else if (rate >= 48)
+    {
+        increment >>= (rate >> 2) - 11;
+
+        // if (clamp)
+        // {
+        //     increment = MAX(increasing, 1);
+        // }
+    }
+
+    voice->env_counter = 0;
+    voice->env_rate = rate;
+    voice->env_increasing = increasing;
+    voice->env_exponential = exponential;
+    voice->env_step = step;
+    voice->env_increment = increment;
+}
+
+static void spu_tick_adsr(spu_voice *voice)
+{
+    int step = voice->env_step;
+    int increment = voice->env_increment;
+
+    if (voice->env_exponential)
+    {
+        if (voice->env_increasing)
+        {
+            if (voice->env > 0x6000)
+            {
+                if (voice->env_rate < 40)
+                {
+                    step >>= 2;
+                }
+                else if (voice->env_rate >= 44)
+                {
+                    increment >>= 2;
+                }
+                else
+                {
+                    step >>= 1;
+                    increment >>= 1;
+                }
+            }
+        }
+        else
+        {
+            step = (step * voice->env) >> 15;
+        }
+    }
+
+    voice->env_counter += increment;
+    if (!(voice->env_counter & 0x8000))
+    {
+        return;
+    }
+
+    voice->env_counter = 0;
+    voice->env += step;
+
+    if (voice->env_increasing)
+    {
+        voice->env = CLAMP(voice->env, -0x8000, 0x7fff);
+    }
+    else
+    {
+        voice->env = CLAMP(voice->env, 0, 0x7fff);
+    }
+
+    if (voice->step == SPU_STEP_ATTACK && voice->env == 0x7fff)
+    {
+        voice->step = SPU_STEP_DECAY;
+        spu_set_adsr(voice);
+    }
+    else if (voice->step == SPU_STEP_DECAY && voice->env <= ((voice->sl + 1) * 0x800))
+    {
+        voice->step = SPU_STEP_SUSTAIN;
+        spu_set_adsr(voice);
+    }
+    else if (voice->step == SPU_STEP_RELEASE && voice->env == 0)
+    {
+        voice->step = SPU_STEP_OFF;
+        endx |= 1 << (voice - spu_voices);
+        spu_set_adsr(voice);
+    }
+}
+
 void spu_init(void)
 {
     mvoll = 0;
@@ -164,6 +307,7 @@ void spu_init(void)
 
     spu_set_key_on(0xffffff);
     spu_set_key_off(0xffffff);
+    endx = 0xffffff;
 
     vmixr = 0;
 
@@ -181,6 +325,10 @@ void spu_init(void)
         spu_voices[i].sl = 0;
         spu_voices[i].r_mode = SPU_ADSR_LIN_DEC;
         spu_voices[i].rr = 0;
+        spu_voices[i].step = SPU_STEP_OFF;
+        spu_voices[i].has_block = 0;
+
+        spu_set_adsr(&spu_voices[i]);
     }
 
     ren = 0;
@@ -192,230 +340,134 @@ void spu_quit(void)
     /* do nothing */
 }
 
-static void spu_set_adsr(spu_voice *voice)
-{
-    int step;
-    int shift;
-    int increasing;
-    int exponential;
-    int inc;
-
-    switch (voice->step)
-    {
-    case SPU_STEP_ATTACK:
-        step = voice->ar & 0x3;
-        shift = voice->ar >> 2;
-        increasing = 1;
-        exponential = voice->a_mode == SPU_ADSR_EXP_INC;
-        break;
-
-    case SPU_STEP_DECAY:
-        step = 0;
-        shift = voice->dr;
-        increasing = 0;
-        exponential = 1;
-        break;
-
-    case SPU_STEP_SUSTAIN:
-        step = voice->sr & 0x3;
-        shift = voice->sr >> 2;
-        increasing = voice->s_mode == SPU_ADSR_LIN_INC || voice->s_mode == SPU_ADSR_EXP_INC;
-        exponential = voice->s_mode == SPU_ADSR_EXP_INC || voice->s_mode == SPU_ADSR_EXP_DEC;
-        break;
-
-    case SPU_STEP_RELEASE:
-        step = 0;
-        shift = voice->rr;
-        increasing = 0;
-        exponential = voice->r_mode == SPU_ADSR_EXP_DEC;
-        break;
-
-    default:
-        assert(0);
-        break;
-    }
-
-    step = 7 - step;
-    step = increasing ? step : ~step;
-    step <<= MAX(0, 11 - shift);
-
-    inc = 0x8000 >> MAX(0, shift - 11);
-
-    if (exponential && increasing && voice->env > 0x6000)
-    {
-        if (shift < 10)
-        {
-            step >>= 2;
-        }
-        else if (shift >= 11)
-        {
-            inc >>= 2;
-        }
-        else
-        {
-            step >>= 2;
-            inc >>= 2;
-        }
-    }
-    else if (exponential && !increasing)
-    {
-        step = (step * voice->env) >> 15;
-    }
-
-    voice->env_step = step;
-    voice->env_counter_inc = inc;
-    voice->env_increasing = increasing;
-}
-
-static void spu_tick_adsr(spu_voice *voice)
-{
-    if (!voice->env_set)
-    {
-        spu_set_adsr(voice);
-        voice->env_set = 1;
-    }
-
-    voice->env_counter += voice->env_counter_inc;
-    if (!(voice->env_counter & 0x8000))
-    {
-        return;
-    }
-
-    voice->env_counter %= 0x8000;
-    voice->env += voice->env_step;
-    voice->env_set = 0;
-
-    if (voice->env_increasing)
-    {
-        voice->env = CLAMP(voice->env, -0x8000, 0x7fff);
-    }
-    else
-    {
-        voice->env = CLAMP(voice->env, 0, 0x7fff);
-    }
-
-    if (voice->step == SPU_STEP_ATTACK && voice->env == 0x7fff)
-    {
-        voice->step = SPU_STEP_DECAY;
-        voice->env_set = 0;
-    }
-
-    if (voice->step == SPU_STEP_DECAY && voice->env <= ((voice->sl + 1) * 0x800))
-    {
-        voice->step = SPU_STEP_SUSTAIN;
-        voice->env_set = 0;
-    }
-}
-
 static int apply_volume(short sample, short volume)
 {
     return (sample * volume) >> 15;
 }
 
-static int sign_extend4(int value)
+static void spu_load_block(spu_voice *voice)
 {
-    return (value & 0x8) ? (value | ~0xf) : value & 0xf;
-}
-
-static short spu_sample(spu_voice *voice)
-{
+    int addr;
     unsigned short header;
     int shift;
     int filter;
-    int sample_index;
+    int filt0, filt1;
+    unsigned short word;
     int sample;
-    int f0, f1;
+    int diff;
 
-    header = waveform_data[voice->addr * 4];
+    addr = voice->addr * 4;
+    header = waveform_data[addr++];
     shift = header & 0xf;
     filter = (header >> 4) & 0xf;
 
     assert(shift <= 12);
     assert(filter <= 4);
 
-    sample_index = voice->pitch_counter >> 12;
+    voice->block_header = header;
 
-    if (sample_index == voice->last_sample_index)
+    if (header & SPU_ADPCM_LOOP_START)
     {
-        return voice->last_sample;
+        voice->lsa = voice->addr;
     }
 
-    sample = waveform_data[voice->addr * 4 + (sample_index / 4) + 1];
-    sample >>= (sample_index & 3) * 4;
-    sample = sign_extend4(sample) << (12 - shift);
+    filt0 = adpcm_filters[filter][0];
+    filt1 = adpcm_filters[filter][1];
 
-    f0 = adpcm_filters[filter][0];
-    f1 = adpcm_filters[filter][1];
+    for (int w = 0; w < 7; w++)
+    {
+        word = waveform_data[addr++];
 
-    sample += (voice->adpcm_hist[0] * f0 + voice->adpcm_hist[1] * f1 + 32) / 64;
-    sample = CLAMP(sample, -0x8000, 0x7fff);
+        for (int i = 0; i < 4; i++)
+        {
+            sample = (short)(word << 12);
+            sample >>= shift;
 
-    voice->adpcm_hist[1] = voice->adpcm_hist[0];
-    voice->adpcm_hist[0] = sample;
+            word >>= 4;
 
-    voice->last_sample_index = sample_index;
-    voice->last_sample = sample;
+            diff = 0;
+            diff += voice->adpcm_hist[0] * filt0;
+            diff += voice->adpcm_hist[1] * filt1;
 
-    return sample;
+            sample += (diff + 32) / 64;
+            sample = CLAMP(sample, -0x8000, 0x7fff);
+
+            voice->adpcm_hist[1] = voice->adpcm_hist[0];
+            voice->adpcm_hist[0] = sample;
+
+            voice->block_samples[w * 4 + i] = sample;
+        }
+    }
 }
 
-static short spu_interp_sample(spu_voice *voice, short sample)
+static short spu_sample(spu_voice *voice)
 {
-    int index = (voice->pitch_counter >> 4) & 0xff;
-    int result;
+    int sample_index;
+    int interp_index;
+    int sample;
+    int output;
 
-    result =  (interp_table[255 - index] * voice->interp_hist[2]) >> 15;
-    result += (interp_table[511 - index] * voice->interp_hist[1]) >> 15;
-    result += (interp_table[256 + index] * voice->interp_hist[0]) >> 15;
-    result += (interp_table[index] * sample) >> 15;
+    if (!voice->has_block)
+    {
+        spu_load_block(voice);
+        voice->has_block = 1;
+    }
+
+    sample_index = voice->pitch_counter >> 12;
+    interp_index = (voice->pitch_counter >> 4) & 0xff;
+
+    sample = voice->block_samples[sample_index];
+
+    output = 0;
+    output += (interp_table[255 - interp_index] * voice->interp_hist[2]) >> 15;
+    output += (interp_table[511 - interp_index] * voice->interp_hist[1]) >> 15;
+    output += (interp_table[256 + interp_index] * voice->interp_hist[0]) >> 15;
+    output += (interp_table[interp_index] * sample) >> 15;
 
     voice->interp_hist[2] = voice->interp_hist[1];
     voice->interp_hist[1] = voice->interp_hist[0];
     voice->interp_hist[0] = sample;
 
-    return result;
+    return output;
+}
+
+static void spu_update_pitch(spu_voice *voice)
+{
+    voice->pitch_counter += MIN(voice->pitch, 0x4000);
+    if (voice->pitch_counter >= 0x1c000)
+    {
+        voice->pitch_counter -= 0x1c000;
+
+        voice->addr += 2;
+        voice->has_block = 0;
+
+        if (voice->block_header & SPU_ADPCM_LOOP_END)
+        {
+            voice->addr = voice->lsa;
+
+            if (!(voice->block_header & SPU_ADPCM_LOOP))
+            {
+                voice->step = SPU_STEP_OFF;
+                voice->env = 0;
+                spu_set_adsr(voice);
+            }
+        }
+    }
 }
 
 static void spu_tick_voice(spu_voice *voice, int *l, int *r)
 {
     int sample;
-    unsigned short header;
 
     spu_tick_adsr(voice);
 
     sample = spu_sample(voice);
-    sample = spu_interp_sample(voice, sample);
     sample = apply_volume(sample, voice->env);
 
     *l += apply_volume(sample, voice->voll << 1);
     *r += apply_volume(sample, voice->volr << 1);
 
-    voice->pitch_counter += MIN(voice->pitch, 0x4000);
-    if (voice->pitch_counter >= 0x1c000)
-    {
-        voice->pitch_counter %= 0x1c000;
-
-        header = waveform_data[voice->addr * 4];
-
-        if (header & SPU_ADPCM_LOOP_START)
-        {
-            voice->lsa = voice->addr;
-        }
-
-        voice->addr += 2;
-
-        if (header & SPU_ADPCM_LOOP_END)
-        {
-            voice->addr = voice->lsa;
-
-            if (!(header & SPU_ADPCM_LOOP))
-            {
-                voice->step = SPU_STEP_RELEASE;
-                voice->env = 0;
-                voice->env_set = 0;
-            }
-        }
-    }
+   spu_update_pitch(voice);
 }
 
 static void spu_tick(void)
@@ -427,11 +479,12 @@ static void spu_tick(void)
     {
         spu_voice *voice = &spu_voices[i];
 
-        spu_tick_voice(voice, &l, &r);
-        if (voice->step == SPU_STEP_RELEASE && voice->env == 0)
+        if (voice->step == SPU_STEP_OFF)
         {
-            endx |= 1 << i;
+            continue;
         }
+
+        spu_tick_voice(voice, &l, &r);
     }
 
     l = CLAMP(l, -0x8000, 0x7fff);
@@ -514,11 +567,6 @@ void spu_set_voice_volume(int num, unsigned short l, unsigned short r)
 
 void spu_set_voice_pitch(int num, unsigned short pitch)
 {
-    if (pitch > 0x1000)
-    {
-        printf("warning: pitch set >4096(%d), this is currently buggy!\n", pitch);
-    }
-
     spu_voices[num].pitch = pitch;
 }
 
@@ -535,11 +583,15 @@ void spu_set_voice_attack(int num, int mode, unsigned short rate)
 
     spu_voices[num].a_mode = mode;
     spu_voices[num].ar = (rate > 0x7f) ? 0x7f : rate;
+
+    spu_set_adsr(&spu_voices[num]);
 }
 
 void spu_set_voice_decay(int num, unsigned short rate)
 {
     spu_voices[num].dr = (rate > 0xf) ? 0xf : rate;
+
+    spu_set_adsr(&spu_voices[num]);
 }
 
 void spu_set_voice_sustain(int num, int mode, unsigned short rate, unsigned short level)
@@ -549,6 +601,8 @@ void spu_set_voice_sustain(int num, int mode, unsigned short rate, unsigned shor
     spu_voices[num].s_mode = mode;
     spu_voices[num].sr = (rate > 0x7f) ? 0x7f : rate;
     spu_voices[num].sl = (level > 0xf) ? 0xf : level;
+
+    spu_set_adsr(&spu_voices[num]);
 }
 
 void spu_set_voice_release(int num, int mode, unsigned short rate)
@@ -557,6 +611,8 @@ void spu_set_voice_release(int num, int mode, unsigned short rate)
 
     spu_voices[num].r_mode = mode;
     spu_voices[num].rr = (rate > 0x1f) ? 0x1f : rate;
+
+    spu_set_adsr(&spu_voices[num]);
 }
 
 void spu_set_key_on(unsigned int keys)
@@ -572,12 +628,17 @@ void spu_set_key_on(unsigned int keys)
             spu_voices[i].lsa = spu_voices[i].ssa;
             spu_voices[i].env = 0;
             spu_voices[i].env_counter = 0;
-            spu_voices[i].env_set = 0;
             spu_voices[i].pitch_counter = 0;
-            spu_voices[i].last_sample_index = -1;
+            spu_voices[i].has_block = 0;
 
-            memset(spu_voices[i].adpcm_hist, 0, sizeof(spu_voices[i].adpcm_hist));
-            memset(spu_voices[i].interp_hist, 0, sizeof(spu_voices[i].interp_hist));
+            spu_set_adsr(&spu_voices[i]);
+
+            spu_voices[i].adpcm_hist[0] = 0;
+            spu_voices[i].adpcm_hist[1] = 0;
+
+            spu_voices[i].interp_hist[0] = 0;
+            spu_voices[i].interp_hist[1] = 0;
+            spu_voices[i].interp_hist[2] = 0;
         }
     }
 }
@@ -589,7 +650,7 @@ void spu_set_key_off(unsigned int keys)
         if (keys & (1 << i))
         {
             spu_voices[i].step = SPU_STEP_RELEASE;
-            spu_voices[i].env_set = 0;
+            spu_set_adsr(&spu_voices[i]);
         }
     }
 }
