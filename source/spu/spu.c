@@ -68,8 +68,8 @@ static int endx; /* bitmask of ended voices */
 
 static spu_voice spu_voices[SPU_NCH];
 
-static unsigned short waveform_data[262144];
-static unsigned short reverb_work_area[49184]; /* based on max size */
+static unsigned short waveform_data[0x100000];  /* 2 MiB matches PS2 */
+static unsigned short reverb_work_area[0xc020]; /* based on max size, doubled for PS2 */
 
 static short output_samples[SPU_STEP_SIZE * 2];
 static size_t output_sample_index;
