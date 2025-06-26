@@ -50,7 +50,7 @@ void spuwr(void)
         eoffs = 0;
     }
 
-    for (int i = 0; i < 21; i++)
+    for (int i = 0; i < SD_N_VOICES; i++)
     {
         if (spu_tr_wk[i].vol_fg)
         {
@@ -112,7 +112,7 @@ void spuwr(void)
 
 void sound_off(void)
 {
-    for (int i = 0; i < 21; i++)
+    for (int i = 0; i < SD_N_VOICES; i++)
     {
         spu_tr_wk[i].r_mode = SPU_ADSR_LIN_DEC;
         spu_tr_wk[i].rr = 7;

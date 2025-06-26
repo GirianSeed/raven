@@ -21,17 +21,17 @@ static int sng_fade_value[SD_BGM_VOICES];
 int            se_tracks;
 int            sd_sng_code_buf[16];
 int            eons;
-SEPLAYTBL      se_playing[8];
+SEPLAYTBL      se_playing[SD_SE_VOICES];
 unsigned int   mdata1;
 unsigned int   mdata2;
 unsigned int   mdata3;
 unsigned int   mdata4;
-SEPLAYTBL      se_request[8];
+SEPLAYTBL      se_request[SD_SE_VOICES];
 int            sng_status;
 int            stop_jouchuu_se;
-int            se_pan[8];
+int            se_pan[SD_SE_VOICES];
 unsigned int   mtrack;
-int            se_vol[8];
+int            se_vol[SD_SE_VOICES];
 int            eoffs;
 unsigned int   keyons;
 unsigned char *se_data;
@@ -47,7 +47,7 @@ WAVE_W         voice_tbl[256];
 unsigned char *mptr;
 int            se_rev_on;
 SOUND_W       *sptr;
-SPU_TRACK_REG  spu_tr_wk[21];
+SPU_TRACK_REG  spu_tr_wk[SD_N_VOICES];
 int            sng_kaihi_fadein_time;
 int            sng_master_vol[SD_BGM_VOICES];
 
@@ -674,7 +674,7 @@ void init_sng_work(void)
 {
     SOUND_W *track;
 
-    for (mtrack = 0; mtrack < 21; mtrack++)
+    for (mtrack = 0; mtrack < SD_N_VOICES; mtrack++)
     {
         track = &sound_w[mtrack];
         sptr = track;
