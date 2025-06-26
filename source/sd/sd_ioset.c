@@ -68,6 +68,7 @@ void spuwr(void)
         {
             if (spu_tr_wk[i].addr == 0xFFFFFFFF)
             {
+                keyons &= ~(1 << i);
                 keyoffs |= 1 << i;
                 continue;
             }
