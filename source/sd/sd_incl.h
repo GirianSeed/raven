@@ -189,7 +189,7 @@ typedef struct SOUND_W
 
     /* tone */
     unsigned char  macro;
-    signed char    micro;
+    unsigned char  micro;
 
     /* reset release decay */
     unsigned short rrd;
