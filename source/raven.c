@@ -21,12 +21,13 @@ int main(int argc, char **argv)
     const char *sdx[2] = {NULL, NULL};
 
     int debug = 0;
+    const char *output = "output.wav";
     int loops = 1;
     int song = 1;
 
     if (argc < 2)
     {
-        printf("usage: raven [-d] [-l loops] [-s song] sdx [sdx2]\n");
+        printf("usage: raven [-d] [-o output] [-l loops] [-s song] sdx [sdx2]\n");
         return 1;
     }
 
@@ -35,6 +36,13 @@ int main(int argc, char **argv)
         if (strcmp(argv[i], "-d") == 0)
         {
             debug = 1;
+            continue;
+        }
+
+        if (strcmp(argv[i], "-o") == 0)
+        {
+            output = argv[i + 1];
+            i++; // skip value
             continue;
         }
 
@@ -99,7 +107,7 @@ int main(int argc, char **argv)
     }
     while (sd_sng_play() || sd_se_play());
 
-    if (write_wave_file("output.wav", samples.data, samples.size))
+    if (write_wave_file(output, samples.data, samples.size))
     {
         printf("error: failed to write output wave file!\n");
     }
