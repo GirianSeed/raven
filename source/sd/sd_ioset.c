@@ -299,7 +299,7 @@ void vol_set(unsigned int vol)
         // pan = mix_fader[mtrack].field_C;
 
         // fix
-        pan = 0;
+        pan = sptr->pand >> 8;
 
         // pan = sptr->pand >> 8;
 
