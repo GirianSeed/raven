@@ -7,35 +7,19 @@
 
 #include "spu/spu.h"
 
-#define SD_BGM_VOICES 13
-#define SD_SE_VOICES  8
-#define SD_N_VOICES   (SD_BGM_VOICES + SD_SE_VOICES)
+#define SD_BGM_VOICES  13
+#define SD_SE_VOICES   8
+#define SD_N_VOICES    (SD_BGM_VOICES + SD_SE_VOICES)
 
-#define SD_BGM_0      0
-#define SD_BGM_1      1
-#define SD_BGM_2      2
-#define SD_BGM_3      3
-#define SD_BGM_4      4
-#define SD_BGM_5      5
-#define SD_BGM_6      6
-#define SD_BGM_7      7
-#define SD_BGM_8      8
-#define SD_BGM_9      9
-#define SD_BGM_10     10
-#define SD_BGM_11     11
-#define SD_BGM_12     12
-#define SD_BGM_END    (SD_BGM_12 + 1)
-#define SD_BGM_MASK   ((1 << SD_BGM_END) - 1)
+#define SD_BGM_START   0
+#define SD_BGM_END     (SD_BGM_START + SD_BGM_VOICES)
+#define SD_BGM_MASK    ((1 << SD_BGM_END) - 1)
 
-#define SD_SE_0       13
-#define SD_SE_1       14
-#define SD_SE_2       15
-#define SD_SE_3       16
-#define SD_SE_4       17
-#define SD_SE_5       18
-#define SD_SE_6       19
-#define SD_SE_7       20
-#define SD_SE_END     (SD_SE_7 + 1)
+#define SD_SE_START    SD_BGM_END
+#define SD_SE_END      (SD_SE_START + SD_SE_VOICES)
+
+// Tracks faded out during evasion
+#define SD_KAIHI_START (SD_BGM_START + 4)
 
 #define SD_PRINT(...)        \
 ({                           \

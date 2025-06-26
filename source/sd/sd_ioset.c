@@ -139,12 +139,12 @@ void sng_off(void)
 
 void se_off(int i)
 {
-    spu_tr_wk[i + SD_SE_0].r_mode = SPU_ADSR_LIN_DEC;
-    spu_tr_wk[i + SD_SE_0].rr = 0;
-    spu_tr_wk[i + SD_SE_0].env3_fg = 1;
+    spu_tr_wk[i + SD_SE_START].r_mode = SPU_ADSR_LIN_DEC;
+    spu_tr_wk[i + SD_SE_START].rr = 0;
+    spu_tr_wk[i + SD_SE_START].env3_fg = 1;
 
-    song_end |= 1 << (i + SD_SE_0);
-    keyoffs |= 1 << (i + SD_SE_0);
+    song_end |= 1 << (i + SD_SE_START);
+    keyoffs |= 1 << (i + SD_SE_START);
 }
 
 void sng_pause(void)
@@ -249,7 +249,7 @@ void vol_set(unsigned int vol)
 {
     unsigned int pan;
 
-    if ((mtrack < SD_BGM_VOICES) || (se_playing[mtrack - SD_SE_0].kind == 0))
+    if ((mtrack < SD_BGM_VOICES) || (se_playing[mtrack - SD_SE_START].kind == 0))
     {
         if (vol >= sptr->dec_vol)
         {
@@ -296,8 +296,8 @@ void vol_set(unsigned int vol)
             vol = 0;
         }
 
-        pan = se_pan[mtrack - SD_SE_0];
-        vol = (vol * se_vol[mtrack - SD_SE_0]) >> 16;
+        pan = se_pan[mtrack - SD_SE_START];
+        vol = (vol * se_vol[mtrack - SD_SE_START]) >> 16;
 
         if (sound_mono_fg != 0)
         {

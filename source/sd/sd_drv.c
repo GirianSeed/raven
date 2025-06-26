@@ -278,12 +278,12 @@ void IntSdMain(void)
 
     }
 
-    for (mtrack = SD_SE_0; mtrack < SD_SE_END; mtrack++)
+    for (mtrack = SD_SE_START; mtrack < SD_SE_END; mtrack++)
     {
-        if (se_tracks < 2 && se_request[mtrack - SD_SE_0].code != 0)
+        if (se_tracks < 2 && se_request[mtrack - SD_SE_START].code != 0)
         {
-            se_off(mtrack - SD_SE_0);
-            se_adrs_set(mtrack - SD_SE_0);
+            se_off(mtrack - SD_SE_START);
+            se_adrs_set(mtrack - SD_SE_START);
             continue;
         }
 
@@ -440,7 +440,7 @@ int SngKaihiP(void)
         sng_fade_time[2] = 43;
         sng_fade_time[3] = 43;
 
-        for (int i = SD_BGM_4; i < SD_BGM_VOICES; i++)
+        for (int i = SD_KAIHI_START; i < SD_BGM_VOICES; i++)
         {
             if (!(sng_fout_term & (1 << i)))
             {
@@ -732,16 +732,16 @@ void se_adrs_set(int num)
     se_request[num].pri       = 0;
     se_request[num].character = 0;
 
-    sng_track_init(&sound_w[num + SD_SE_0]);
+    sng_track_init(&sound_w[num + SD_SE_START]);
 
     se_vol[num] = (se_playing[num].code & 0x3f00) * 2;
 
-    song_end &= ~(1 << (num + SD_SE_0));
-    keyons &= ~(1 << (num + SD_SE_0));
+    song_end &= ~(1 << (num + SD_SE_START));
+    keyons &= ~(1 << (num + SD_SE_START));
     se_pan[num] = ((se_playing[num].code >> 16) + 32) & 0x3f;
-    keyoffs = keyoffs & ~(1 << (num + SD_SE_0));
+    keyoffs = keyoffs & ~(1 << (num + SD_SE_START));
 
-    sound_w[num + SD_SE_0].mpointer = se_playing[num].addr;
+    sound_w[num + SD_SE_START].mpointer = se_playing[num].addr;
 
     if (se_playing[num].kind)
     {
