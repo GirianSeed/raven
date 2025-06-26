@@ -16,8 +16,6 @@ void sd_term(void);
 void sd_tick(void);
 
 /* sd_file.c */
-int sd_sng_data_load(const char *name);
-int sd_se_data_load(const char *name);
-int sd_wav_data_load(const char *name);
+int sd_pack_data_load(const char *name);
 
 #endif // _SD_CLI_H_

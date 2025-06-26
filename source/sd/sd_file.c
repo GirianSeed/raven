@@ -7,105 +7,43 @@
 
 #include <arpa/inet.h>
 
-int sd_sng_data_load(const char *name)
+static int sd_sng_data_load(FILE *fp, size_t size)
 {
-    FILE *fp;
-    size_t size;
     size_t rb;
-
-    fp = fopen(name, "rb");
-    if (fp == NULL)
-    {
-        SD_PRINT("ERROR:could not open song file %s\n", name);
-        return 1;
-    }
-
-    fseek(fp, 0, SEEK_END);
-    size = ftell(fp);
-    fseek(fp, 0, SEEK_SET);
 
     if (size > sizeof(sng_data))
     {
         SD_PRINT("ERROR:song data size exceeds max %zx\n", size);
-        goto error;
+        return 1;
     }
 
     rb = fread(sng_data, size, 1, fp);
     if (rb != 1)
     {
         SD_PRINT("ERROR:unable to read song data\n");
-        goto error;
+        return 1;
     }
 
     sng_play_code = 0;
     sng_status = 2;
 
-    fclose(fp);
     return 0;
-
-error:
-    fclose(fp);
-    return 1;
 }
 
-int sd_se_data_load(const char *name)
+static int sd_wav_data_load(FILE *fp, size_t size)
 {
-    FILE *fp;
-    size_t size;
-    size_t rb;
-
-    fp = fopen(name, "rb");
-    if (fp == NULL)
-    {
-        SD_PRINT("ERROR:could not open se file %s\n", name);
-        return 1;
-    }
-
-    fseek(fp, 0, SEEK_END);
-    size = ftell(fp);
-    fseek(fp, 0, SEEK_SET);
-
-    if (size > sizeof(se_header))
-    {
-        SD_PRINT("ERROR:se data size exceeds max %zx\n", size);
-        goto error;
-    }
-
-    rb = fread(se_header, size, 1, fp);
-    if (rb != 1)
-    {
-        SD_PRINT("ERROR:unable to read se data\n");
-        goto error;
-    }
-
-    fclose(fp);
-    return 0;
-
-error:
-    fclose(fp);
-    return 1;
-}
-
-int sd_wav_data_load(const char *name)
-{
-    FILE *fp;
     WAVE_H header;
     size_t rb;
     char *data;
 
-    fp = fopen(name, "rb");
-    if (fp == NULL)
-    {
-        SD_PRINT("ERROR:could not open wave file %s\n", name);
-        return 1;
-    }
+    (void)size;
 
     /* read wave table header */
     rb = fread(&header, sizeof(header), 1, fp);
     if (rb != 1)
     {
         SD_PRINT("ERROR:unable to read wave table header\n");
-        goto error;
+        return 1;
     }
 
     header.offset = htonl(header.offset);
@@ -119,7 +57,7 @@ int sd_wav_data_load(const char *name)
     if (rb != 1)
     {
         SD_PRINT("ERROR:unable to read wave table\n");
-        goto error;
+        return 1;
     }
 
     /* read wave data header */
@@ -127,7 +65,7 @@ int sd_wav_data_load(const char *name)
     if (rb != 1)
     {
         SD_PRINT("ERROR:unable to read wave data header\n");
-        goto error;
+        return 1;
     }
 
     header.offset = htonl(header.offset);
@@ -137,7 +75,7 @@ int sd_wav_data_load(const char *name)
     if (data == NULL)
     {
         SD_PRINT("ERROR:unable to allocate wave data temp\n");
-        goto error;
+        return 1;
     }
 
     /* read wave data */
@@ -145,17 +83,68 @@ int sd_wav_data_load(const char *name)
     if (rb != 1)
     {
         SD_PRINT("ERROR:unable to read wave data\n");
-        goto error2;
+        free(data);
+        return 1;
     }
 
     spu_write(header.offset, data, header.size);
 
     free(data);
-    fclose(fp);
     return 0;
+}
 
-error2:
-    free(data);
+#define PACK_BLOCK_SIZE 0x800
+
+int sd_pack_data_load(const char *name)
+{
+    FILE *fp;
+    PACK_H header;
+    size_t size;
+    size_t rb;
+    size_t bgm_sequence_size;
+    size_t bgm_waveform_size;
+
+    fp = fopen(name, "rb");
+    if (fp == NULL)
+    {
+        SD_PRINT("ERROR:unable to open sound pack file\n");
+        return 1;
+    }
+
+    fseek(fp, 0, SEEK_END);
+    size = ftell(fp);
+    fseek(fp, 0, SEEK_SET);
+
+    rb = fread(&header, sizeof(header), 1, fp);
+    if (rb != 1)
+    {
+        SD_PRINT("ERROR:unable to read sound pack header\n");
+        goto error;
+    }
+
+    header.offset_bgm_waveform *= PACK_BLOCK_SIZE;
+    header.offset_sfx_waveform *= PACK_BLOCK_SIZE;
+    header.offset_sfx_sequence *= PACK_BLOCK_SIZE;
+    header.offset_bgm_sequence *= PACK_BLOCK_SIZE;
+
+    bgm_sequence_size = size - header.offset_bgm_sequence;
+    bgm_waveform_size = header.offset_sfx_waveform - header.offset_bgm_waveform;
+
+    fseek(fp, header.offset_bgm_waveform, SEEK_SET);
+    if (sd_wav_data_load(fp, bgm_waveform_size))
+    {
+        SD_PRINT("ERROR:unable to read BGM waveform data\n");
+        goto error;
+    }
+
+    fseek(fp, header.offset_bgm_sequence, SEEK_SET);
+    if (sd_sng_data_load(fp, bgm_sequence_size))
+    {
+        SD_PRINT("ERROR:unable to read BGM sequence data\n");
+        goto error;
+    }
+
+    return 0;
 
 error:
     fclose(fp);

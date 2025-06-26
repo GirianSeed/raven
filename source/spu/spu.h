@@ -3,8 +3,7 @@
 
 #include <stddef.h>
 
-#define SPU_NCH               24
-#define SPU_VOICE_MASK        ((1 << SPU_NCH) - 1)
+#define SPU_NCH               32
 
 #define SPU_ADSR_LIN_INC      1
 #define SPU_ADSR_LIN_DEC      3
@@ -23,7 +22,7 @@
 #define SPU_REV_MODE_PIPE     9
 #define SPU_REV_MODE_MAX      10
 
-#define SPU_STEP_SIZE         448
+#define SPU_STEP_SIZE         240
 
 typedef void (*spu_output_sample_fn_t)(void *userdata, const short *samples, size_t size);
 

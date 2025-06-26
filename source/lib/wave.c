@@ -52,7 +52,7 @@ int write_wave_file(const char *name, const char *data, size_t size)
     fmt_chunk.size = 16;
     fmt_chunk.format = WAVE_PCM;
     fmt_chunk.channels = 2;
-    fmt_chunk.sample_rate = 44100;
+    fmt_chunk.sample_rate = 48000;
     fmt_chunk.byte_rate = fmt_chunk.sample_rate * fmt_chunk.channels * sizeof(short);
     fmt_chunk.block_align = fmt_chunk.channels * sizeof(short);
     fmt_chunk.sample_size = sizeof(short) * CHAR_BIT;

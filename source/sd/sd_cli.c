@@ -14,36 +14,14 @@ int sd_sng_play(void)
 
 int sd_se_play(void)
 {
-    int bits = song_end >> SD_BGM_VOICES;
-    for (int i = 0; i < 8; i++)
-    {
-        if ((bits & 1) == 0 && se_playing[i].pri != 255)
-        {
-            return se_playing[i].code;
-        }
-        bits >>= 1;
-    }
     return 0;
 }
 
 static int SePlay(unsigned int sound_code)
 {
     SEPLAYTBL se;
-    int       bits;
     int       index;
     int       pri;
-
-    bits = song_end >> SD_BGM_VOICES;
-    for (int i = 0; i < 8; i++)
-    {
-        if ((bits & 1) != 0)
-        {
-            se_playing[i].code = 0;
-            se_playing[i].pri = 0;
-            se_playing[i].character = 0;
-        }
-        bits >>= 1;
-    }
 
     se.code = sound_code;
     sound_code &= 0xFF;
@@ -209,6 +187,9 @@ static void sd_set(unsigned int sound_code)
             return;
         case 0xFF0000FE:
             stop_jouchuu_se = 1;
+            return;
+        case 0xFF0000FF:
+            skip_intro_loop = 1;
             return;
         }
 

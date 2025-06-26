@@ -1,6 +1,18 @@
 #ifndef _SD_INCL_H_
 #define _SD_INCL_H_
 
+typedef struct PACK_H
+{
+    unsigned int   offset_bgm_waveform;
+    char           unused1[4];
+    unsigned int   offset_sfx_waveform;
+    char           unused2[4];
+    unsigned int   offset_sfx_sequence;
+    char           unused3[4];
+    unsigned int   offset_bgm_sequence;
+    char           unused4[4];
+} PACK_H;
+
 typedef struct WAVE_H
 {
     unsigned int   offset;

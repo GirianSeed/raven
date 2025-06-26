@@ -18,8 +18,7 @@ int main(int argc, char **argv)
 {
     vector samples;
 
-    const char *mdx = NULL;
-    const char *wvx[3] = {NULL, NULL, NULL};
+    const char *sdx[2] = {NULL, NULL};
 
     int debug = 0;
     int loops = 1;
@@ -27,7 +26,7 @@ int main(int argc, char **argv)
 
     if (argc < 2)
     {
-        printf("usage: raven [-d] [-l loops] [-s song] mdx wvx [wvx2] [wvx3]\n");
+        printf("usage: raven [-d] [-l loops] [-s song] sdx [sdx2]\n");
         return 1;
     }
 
@@ -53,42 +52,24 @@ int main(int argc, char **argv)
             continue;
         }
 
-        if (!mdx)
+        if (!sdx[0])
         {
-            mdx = argv[i];
+            sdx[0] = argv[i];
             continue;
         }
 
-        if (!wvx[0])
+        if (!sdx[1])
         {
-            wvx[0] = argv[i];
-            continue;
-        }
-
-        if (!wvx[1])
-        {
-            wvx[1] = argv[i];
-            continue;
-        }
-
-        if (!wvx[2])
-        {
-            wvx[2] = argv[i];
+            sdx[1] = argv[i];
             continue;
         }
 
         printf("unknown argument: %s\n", argv[i]);
     }
 
-    if (!mdx)
+    if (!sdx[0])
     {
-        printf("error: missing required argument mdx\n");
-        return 1;
-    }
-
-    if (!wvx[0])
-    {
-        printf("error: missing required argument wvx\n");
+        printf("error: missing required argument sdx\n");
         return 1;
     }
 
@@ -99,21 +80,17 @@ int main(int argc, char **argv)
     }
 
     sd_init(debug, loops);
-    sd_sng_data_load(mdx);
-    sd_wav_data_load(wvx[0]);
+    sd_pack_data_load(sdx[0]);
 
-    if (wvx[1])
+    if (sdx[1])
     {
-        sd_wav_data_load(wvx[1]);
-    }
-
-    if (wvx[2])
-    {
-        sd_wav_data_load(wvx[2]);
+        sd_pack_data_load(sdx[1]);
     }
 
     sd_set_cli(0xFF000006, SD_ASYNC); // stereo
     sd_set_cli(0x01000000 + song, SD_ASYNC); // song n
+
+    sd_set_cli(0xFF0000FF, SD_ASYNC); // skip intro loop
 
     do
     {

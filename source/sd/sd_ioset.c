@@ -5,18 +5,45 @@
 
 #include <stdio.h>
 
+/* old */
+/*
 static unsigned int pant[41] = {
     0,   2,   4,   7,   10,  13,  16,  20,  24,  28,  32,  36,  40,  45,
     50,  55,  60,  65,  70,  75,  80,  84,  88,  92,  96,  100, 104, 107,
     110, 112, 114, 116, 118, 120, 122, 123, 124, 125, 126, 127, 127
 };
+*/
 
+static unsigned int pant[41] = {
+    0x0000, 0x0141, 0x0352, 0x06F5, 0x0A7A, 0x0DE3, 0x0F5D, 0x12F7,
+    0x1617, 0x1919, 0x1A66, 0x1D40, 0x1FFC, 0x229C, 0x2404, 0x2677,
+    0x28CE, 0x2B07, 0x2D24, 0x2E44, 0x2FFF, 0x31A3, 0x329D, 0x344B,
+    0x35DB, 0x374F, 0x3811, 0x3958, 0x3A82, 0x3B90, 0x3C81, 0x3CE3,
+    0x3DAA, 0x3E55, 0x3EF1, 0x3F25, 0x3F87, 0x3FCB, 0x3FF3, 0x3FFF,
+    0x3FFF
+};
+
+/* old */
+/*
 static unsigned int se_pant[65] = {
     0,   2,   4,   6,   8,   10,  14,  18,  22,  28,  34,  40,  46,
     52,  58,  64,  70,  76,  82,  88,  94,  100, 106, 112, 118, 124,
     130, 136, 142, 148, 154, 160, 166, 172, 178, 183, 188, 193, 198,
     203, 208, 213, 217, 221, 224, 227, 230, 233, 236, 238, 240, 242,
     244, 246, 248, 249, 250, 251, 252, 253, 254, 254, 255, 255, 255
+};
+*/
+
+static unsigned int se_pant[65] = {
+    0x0000, 0x00C5, 0x024D, 0x04CF, 0x0688, 0x08F3, 0x0A61, 0x0CB7,
+    0x0E51, 0x0FAC, 0x11E3, 0x1369, 0x1589, 0x16FF, 0x18D5, 0x1A3C,
+    0x1B9C, 0x1D87, 0x1EA8, 0x207E, 0x21BF, 0x22CD, 0x2485, 0x25B0,
+    0x2751, 0x2845, 0x29D1, 0x2ADD, 0x2BE4, 0x2D2C, 0x2E23, 0x2F7A,
+    0x2FFF, 0x3082, 0x31C0, 0x3297, 0x33A2, 0x346A, 0x352B, 0x3634,
+    0x36CD, 0x37C1, 0x3863, 0x3940, 0x39BF, 0x3A4C, 0x3B0A, 0x3B76,
+    0x3C1F, 0x3C8E, 0x3CF6, 0x3D72, 0x3DCB, 0x3E3F, 0x3E88, 0x3EE5,
+    0x3F17, 0x3F4A, 0x3F89, 0x3FA8, 0x3FD2, 0x3FE6, 0x3FF9, 0x3FFF,
+    0x3FFF
 };
 
 static unsigned int freq_tbl[108] = {
@@ -50,7 +77,7 @@ void spuwr(void)
         eoffs = 0;
     }
 
-    for (int i = 0; i < 21; i++)
+    for (int i = 0; i < SD_BGM_VOICES; i++)
     {
         if (spu_tr_wk[i].vol_fg)
         {
@@ -111,16 +138,15 @@ void spuwr(void)
 
 void sound_off(void)
 {
-    for (int i = 0; i < 21; i++)
+    for (int i = 0; i < SD_BGM_VOICES; i++)
     {
         spu_tr_wk[i].r_mode = SPU_ADSR_LIN_DEC;
         spu_tr_wk[i].rr = 7;
         spu_tr_wk[i].env3_fg = 1;
-
-        song_end |= 1 << mtrack;
     }
 
-    keyoffs = 0x7FFFFF;
+    keyoffs = 0xFFFFFFFF;
+    spuwr();
 }
 
 void sng_off(void)
@@ -138,12 +164,9 @@ void sng_off(void)
 
 void se_off(int i)
 {
-    spu_tr_wk[i + SD_SE_0].r_mode = SPU_ADSR_LIN_DEC;
-    spu_tr_wk[i + SD_SE_0].rr = 0;
-    spu_tr_wk[i + SD_SE_0].env3_fg = 1;
-
-    song_end |= 1 << (i + SD_SE_0);
-    keyoffs |= 1 << (i + SD_SE_0);
+    spu_tr_wk[i + SD_SE_START].r_mode = SPU_ADSR_LIN_DEC;
+    spu_tr_wk[i + SD_SE_START].rr = 0;
+    spu_tr_wk[i + SD_SE_START].env3_fg = 1;
 }
 
 void sng_pause(void)
@@ -166,20 +189,31 @@ void keyoff(void)
     keyoffs |= keyd;
 }
 
-void tone_set(unsigned char num)
+void tone_set(unsigned int num)
 {
-    if (voice_tbl[num].addr == 0xFFFFFFFF)
+    WAVE_W *sample;
+
+    if (num < 512)
+    {
+        sample = &voice_tbl[num];
+    }
+    else
+    {
+        sample = &voice_exp_tbl[num - 512];
+    }
+
+    if (sample->addr == 0xFFFFFFFF)
     {
         SD_PRINT("track %d missing sample %d!\n", mtrack, num);
     }
 
-    spu_tr_wk[mtrack].addr = voice_tbl[num].addr;
+    spu_tr_wk[mtrack].addr = sample->addr;
     spu_tr_wk[mtrack].addr_fg = 1;
 
-    sptr->macro = voice_tbl[num].sample_note;
-    sptr->micro = voice_tbl[num].sample_tune;
+    sptr->macro = sample->sample_note;
+    sptr->micro = sample->sample_tune;
 
-    if (voice_tbl[num].a_mode)
+    if (sample->a_mode)
     {
         spu_tr_wk[mtrack].a_mode = SPU_ADSR_EXP_INC;
     }
@@ -188,11 +222,11 @@ void tone_set(unsigned char num)
         spu_tr_wk[mtrack].a_mode = SPU_ADSR_LIN_INC;
     }
 
-    spu_tr_wk[mtrack].ar = ~voice_tbl[num].ar & 0x7F;
-    spu_tr_wk[mtrack].dr = ~voice_tbl[num].dr & 0xF;
+    spu_tr_wk[mtrack].ar = ~sample->ar & 0x7F;
+    spu_tr_wk[mtrack].dr = ~sample->dr & 0xF;
     spu_tr_wk[mtrack].env1_fg = 1;
 
-    switch (voice_tbl[num].s_mode)
+    switch (sample->s_mode)
     {
     case 0:
         spu_tr_wk[mtrack].s_mode = SPU_ADSR_LIN_DEC;
@@ -211,11 +245,11 @@ void tone_set(unsigned char num)
         break;
     }
 
-    spu_tr_wk[mtrack].sr = ~voice_tbl[num].sr & 0x7F;
-    spu_tr_wk[mtrack].sl = voice_tbl[num].sl & 0xF;
+    spu_tr_wk[mtrack].sr = ~sample->sr & 0x7F;
+    spu_tr_wk[mtrack].sl = sample->sl & 0xF;
     spu_tr_wk[mtrack].env2_fg = 1;
 
-    if (!voice_tbl[num].r_mode)
+    if (!sample->r_mode)
     {
         spu_tr_wk[mtrack].r_mode = SPU_ADSR_LIN_DEC;
     }
@@ -224,15 +258,15 @@ void tone_set(unsigned char num)
         spu_tr_wk[mtrack].r_mode = SPU_ADSR_EXP_DEC;
     }
 
-    spu_tr_wk[mtrack].rr = sptr->rrd = ~voice_tbl[num].rr & 0x1F;
+    spu_tr_wk[mtrack].rr = sptr->rrd = ~sample->rr & 0x1F;
     spu_tr_wk[mtrack].env3_fg = 1;
 
     if (sptr->panmod == 0)
     {
-        pan_set2(voice_tbl[num].pan);
+        pan_set2(sample->pan);
     }
 
-    sptr->dec_vol = voice_tbl[num].decl_vol;
+    sptr->dec_vol = sample->decl_vol;
 }
 
 void pan_set2(unsigned char pan)
@@ -247,18 +281,47 @@ void pan_set2(unsigned char pan)
 void vol_set(unsigned int vol)
 {
     unsigned int pan;
+    unsigned int l, r;
 
-    if ((mtrack < SD_BGM_VOICES) || (se_playing[mtrack - SD_SE_0].kind == 0))
+    if (vol >= sptr->dec_vol)
     {
-        if (vol >= sptr->dec_vol)
+        vol -= sptr->dec_vol;
+    }
+    else
+    {
+        vol = 0;
+    }
+
+    vol++;
+
+    if (sptr->panmod == 2 && mtrack < SD_BGM_VOICES)
+    {
+        // pan = mix_fader[mtrack].field_C;
+
+        // fix
+        pan = 0;
+
+        // pan = sptr->pand >> 8;
+
+        // if (pan > 40)
+        // {
+        //     pan = 40;
+        // }
+
+        if (sound_mono_fg != 0)
         {
-            vol -= sptr->dec_vol;
-        }
-        else
-        {
-            vol = 0;
+            pan = 32;
         }
 
+        l = (vol * se_pant[64 - pan]) / 0x7f;
+        r = (vol * se_pant[pan]) / 0x7f;
+
+        spu_tr_wk[mtrack].vol_l = (l * sng_master_vol[mtrack]) >> 16;
+        spu_tr_wk[mtrack].vol_r = (r * sng_master_vol[mtrack]) >> 16;
+        spu_tr_wk[mtrack].vol_fg = 1;
+    }
+    else if ((mtrack < SD_BGM_VOICES) || (se_playing[mtrack - SD_SE_START].kind == 0))
+    {
         pan = sptr->pand >> 8;
 
         if (pan > 40)
@@ -271,40 +334,40 @@ void vol_set(unsigned int vol)
             pan = 20;
         }
 
+        l = (vol * pant[40 - pan]) / 0x7f;
+        r = (vol * pant[pan]) / 0x7f;
+
         if (mtrack < SD_BGM_VOICES)
         {
-            spu_tr_wk[mtrack].vol_r = (vol * pant[pan] * sng_master_vol[mtrack]) >> 16;
-            spu_tr_wk[mtrack].vol_l = (vol * pant[40 - pan] * sng_master_vol[mtrack]) >> 16;
+            spu_tr_wk[mtrack].vol_l = (l * sng_master_vol[mtrack]) >> 16;
+            spu_tr_wk[mtrack].vol_r = (r * sng_master_vol[mtrack]) >> 16;
             spu_tr_wk[mtrack].vol_fg = 1;
         }
         else
         {
-            spu_tr_wk[mtrack].vol_r = vol * pant[pan];
-            spu_tr_wk[mtrack].vol_l = vol * pant[40 - pan];
+            spu_tr_wk[mtrack].vol_l = l;
+            spu_tr_wk[mtrack].vol_r = r;
             spu_tr_wk[mtrack].vol_fg = 1;
         }
     }
     else
     {
-        if (vol >= sptr->dec_vol)
-        {
-            vol -= sptr->dec_vol;
-        }
-        else
-        {
-            vol = 0;
-        }
-
-        pan = se_pan[mtrack - SD_SE_0];
-        vol = (vol * se_vol[mtrack - SD_SE_0]) >> 16;
+        pan = se_pan[mtrack - SD_SE_START];
+        vol = (vol * se_vol[mtrack - SD_SE_START]) >> 16;
 
         if (sound_mono_fg != 0)
         {
             pan = 32;
         }
 
-        spu_tr_wk[mtrack].vol_r = vol * se_pant[pan];
-        spu_tr_wk[mtrack].vol_l = vol * se_pant[64 - pan];
+        vol = (vol * se_vol[mtrack - SD_SE_START]) >> 6;
+        vol++;
+
+        l = (vol * se_pant[64 - pan]) >> 7;
+        r = (vol * se_pant[pan]) >> 7;
+
+        spu_tr_wk[mtrack].vol_l = l;
+        spu_tr_wk[mtrack].vol_r = r;
         spu_tr_wk[mtrack].vol_fg = 1;
     }
 }
@@ -317,8 +380,7 @@ void freq_set(unsigned int base)
 
     base += sptr->micro;
     temp4 = base;
-    temp3 = (base >> 8) + sptr->macro;
-    temp3 &= 0x7F;
+    temp3 = ((base >> 8) + sptr->macro) & 0x7f;
     ptr = freq_tbl;
     freq = ptr[temp3 + 1] - ptr[temp3];
 
@@ -336,8 +398,7 @@ void freq_set(unsigned int base)
     spu_tr_wk[mtrack].pitch_fg = 1;
 }
 
-void drum_set(unsigned char num)
+void drum_set(unsigned int num)
 {
-    int wavs = 79; // 0 or 79
-    tone_set(wavs + 184 + num);
+    tone_set(num + 440);
 }

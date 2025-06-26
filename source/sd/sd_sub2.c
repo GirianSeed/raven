@@ -1,6 +1,8 @@
 #include "sd/sd_ext.h"
 #include "sd/sd_incl.h"
 
+#include <stdio.h>
+
 void rest_set(void)
 {
     sptr->rest_fg = 1;
@@ -51,6 +53,12 @@ void use_set(void)
     /* do nothing */
 }
 
+void ofs_set(void)
+{
+    spu_tr_wk[mtrack].addr += mdata2 * 0x1000 + mdata3 * 0x10;
+    spu_tr_wk[mtrack].addr_fg = 1;
+}
+
 void pan_set(void)
 {
     sptr->panmod = mdata2;
@@ -85,7 +93,6 @@ void pan_move(void)
         {
             sptr->panad = 2032;
         }
-
     }
 }
 
@@ -146,7 +153,18 @@ void lp1_start(void)
 
 void lp1_end(void)
 {
-    if (stop_jouchuu_se && mdata2 == 0)
+    if (mtrack < 32)
+    {
+        /* if (skip_intro_loop && mdata2 == 0) */
+        if (mdata2 == 0)
+        {
+            sptr->lp1_vol = 0;
+            sptr->lp1_freq = 0;
+            skip_intro_loop++;
+            return;
+        }
+    }
+    else if (stop_jouchuu_se && mdata2 == 0)
     {
         sptr->lp1_vol = 0;
         sptr->lp1_freq = 0;
@@ -185,7 +203,7 @@ void lp2_end(void)
     {
         sptr->lp2_vol += (signed char)mdata3;
         sptr->lp2_freq +=  8 * (signed char)mdata4;
-        mptr =  sptr->lp2_addr;
+        mptr = sptr->lp2_addr;
     }
 }
 
@@ -275,8 +293,9 @@ void vol_move(void)
     sptr->pvoc = mdata2;
     sptr->pvom = mdata3;
 
-    vol = (mdata3 << 8);
-    vol = vol - sptr->pvod;
+    vol = mdata3 << 8;
+    vol -= sptr->pvod;
+
     if (vol < 0)
     {
         sptr->pvoad = -(-vol / sptr->pvoc);
@@ -340,18 +359,12 @@ void echo_set2(void)
 
 void eon_set(void)
 {
-    if (mtrack >= SD_SE_0 && mtrack < SD_SE_END && se_playing[mtrack - SD_SE_0].kind == 0)
-    {
-        eons |= 1 << mtrack;
-    }
+    /* do nothing */
 }
 
 void eof_set(void)
 {
-    if (mtrack >= SD_SE_0 && mtrack < SD_SE_END && se_playing[mtrack - SD_SE_0].kind == 0)
-    {
-        eoffs |= 1 << mtrack;
-    }
+    /* do nothing */
 }
 
 void kakko_start(void)
@@ -383,7 +396,48 @@ void kakko_end(void)
 
 void env_set(void)
 {
-    /* do nothing */
+    if (mdata2 == 0)
+    {
+        spu_tr_wk[mtrack].a_mode = SPU_ADSR_LIN_INC;
+    }
+    else
+    {
+        spu_tr_wk[mtrack].a_mode = SPU_ADSR_EXP_INC;
+    }
+
+    spu_tr_wk[mtrack].env1_fg = 1;
+
+    switch (mdata3)
+    {
+    case 0:
+        spu_tr_wk[mtrack].s_mode = SPU_ADSR_LIN_DEC;
+        break;
+
+    case 1:
+        spu_tr_wk[mtrack].s_mode = SPU_ADSR_EXP_DEC;
+        break;
+
+    case 2:
+        spu_tr_wk[mtrack].s_mode = SPU_ADSR_LIN_INC;
+        break;
+
+    default:
+        spu_tr_wk[mtrack].s_mode = SPU_ADSR_EXP_INC;
+        break;
+    }
+
+    spu_tr_wk[mtrack].env2_fg = 1;
+
+    if (mdata4 == 0)
+    {
+        spu_tr_wk[mtrack].r_mode = SPU_ADSR_LIN_DEC;
+    }
+    else
+    {
+        spu_tr_wk[mtrack].r_mode = SPU_ADSR_EXP_DEC;
+    }
+
+    spu_tr_wk[mtrack].env3_fg = 1;
 }
 
 void ads_set(void)
@@ -428,5 +482,5 @@ void block_end(void)
 
 void no_cmd(void)
 {
-    /* do nothing */
+    SD_PRINT("track %d, unknown command %x\n", mtrack, mdata1);
 }

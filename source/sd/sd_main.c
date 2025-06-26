@@ -37,6 +37,7 @@ void sd_init(int debug, int loops)
     }
 
     memset(voice_tbl, 0xff, sizeof(voice_tbl));
+    memset(voice_exp_tbl, 0xff, sizeof(voice_exp_tbl));
     memset(spu_tr_wk, 0, sizeof(spu_tr_wk));
 
     SD_PRINT("SD:START\n");
@@ -59,7 +60,7 @@ void sd_init(int debug, int loops)
 
 void sd_term(void)
 {
-    spu_set_key_off(0xffffff);
+    spu_set_key_off(0xffffffff);
     spu_quit();
 
     SD_PRINT("SD:TERM\n");

@@ -305,9 +305,9 @@ void spu_init(void)
     memset(waveform_data, 0xff, sizeof(waveform_data));
     memset(reverb_work_area, 0xff, sizeof(reverb_work_area));
 
-    spu_set_key_on(0xffffff);
-    spu_set_key_off(0xffffff);
-    endx = 0xffffff;
+    spu_set_key_on(0xffffffff);
+    spu_set_key_off(0xffffffff);
+    endx = 0xffffffff;
 
     vmixr = 0;
 
@@ -539,12 +539,12 @@ void spu_set_reverb_depth(short l, short r)
 
 void spu_set_reverb_on(unsigned int mask)
 {
-    vmixr |= mask & 0xffffff;
+    vmixr |= mask;
 }
 
 void spu_set_reverb_off(unsigned int mask)
 {
-    vmixr &= ~(mask & 0xffffff);
+    vmixr &= ~mask;
 }
 
 void spu_reverb_clear(void)
@@ -556,6 +556,8 @@ void spu_write(unsigned int addr, char *ptr, unsigned int size)
 {
     addr = (addr + 0x7) & ~0x7;
     size = (size + 0x3f) & ~0x3f;
+
+    assert((addr + size) <= sizeof(waveform_data));
     memcpy((char *)waveform_data + addr, ptr, size);
 }
 
@@ -649,7 +651,15 @@ void spu_set_key_off(unsigned int keys)
     {
         if (keys & (1 << i))
         {
-            spu_voices[i].step = SPU_STEP_RELEASE;
+            if (spu_voices[i].env == 0)
+            {
+                spu_voices[i].step = SPU_STEP_OFF;
+            }
+            else
+            {
+                spu_voices[i].step = SPU_STEP_RELEASE;
+            }
+
             spu_set_adsr(&spu_voices[i]);
         }
     }

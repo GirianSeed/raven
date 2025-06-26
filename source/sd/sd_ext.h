@@ -7,35 +7,16 @@
 
 #include "spu/spu.h"
 
-#define SD_BGM_VOICES 13
-#define SD_SE_VOICES  8
+#define SD_BGM_VOICES 32
+#define SD_SE_VOICES  12
 #define SD_N_VOICES   (SD_BGM_VOICES + SD_SE_VOICES)
 
-#define SD_BGM_0      0
-#define SD_BGM_1      1
-#define SD_BGM_2      2
-#define SD_BGM_3      3
-#define SD_BGM_4      4
-#define SD_BGM_5      5
-#define SD_BGM_6      6
-#define SD_BGM_7      7
-#define SD_BGM_8      8
-#define SD_BGM_9      9
-#define SD_BGM_10     10
-#define SD_BGM_11     11
-#define SD_BGM_12     12
-#define SD_BGM_END    (SD_BGM_12 + 1)
-#define SD_BGM_MASK   ((1 << SD_BGM_END) - 1)
+#define SD_BGM_START  0
+#define SD_BGM_END    (SD_BGM_START + SD_BGM_VOICES)
+#define SD_BGM_MASK   0xffffffff
 
-#define SD_SE_0       13
-#define SD_SE_1       14
-#define SD_SE_2       15
-#define SD_SE_3       16
-#define SD_SE_4       17
-#define SD_SE_5       18
-#define SD_SE_6       19
-#define SD_SE_7       20
-#define SD_SE_END     (SD_SE_7 + 1)
+#define SD_SE_START   SD_BGM_END
+#define SD_SE_END     (SD_SE_START + SD_SE_VOICES)
 
 #define SD_PRINT(...)        \
 ({                           \
@@ -51,9 +32,7 @@ void sd_term(void);
 void sd_tick(void);
 
 /* sd_file.c */
-int sd_sng_data_load(const char *name);
-int sd_se_data_load(const char *name);
-int sd_wav_data_load(const char *name);
+int sd_pack_data_load(const char *name);
 
 /* sd_drv.c */
 void IntSdMain(void);
@@ -93,6 +72,7 @@ void sno_set(void);
 void svl_set(void);
 void svp_set(void);
 void use_set(void);
+void ofs_set(void);
 void pan_set(void);
 void pan_move(void);
 void vib_set(void);
@@ -138,11 +118,11 @@ void sng_pause(void);
 void sng_pause_off(void);
 void keyon(void);
 void keyoff(void);
-void tone_set(unsigned char n);
+void tone_set(unsigned int n);
 void pan_set2(unsigned char x);
 void vol_set(unsigned int vol_data);
 void freq_set(unsigned int note_tune);
-void drum_set(unsigned char n);
+void drum_set(unsigned int n);
 
 /* sd_cli.c */
 int sd_sng_play(void);
@@ -178,18 +158,19 @@ extern  unsigned int   keyons;
 extern  unsigned char *se_data;
 extern  SETBL2        *se_exp_table;
 extern  unsigned int   keyoffs;
-extern  unsigned char  sng_data[0x4000];
+extern  unsigned char  sng_data[0x20000];
 extern  unsigned int   song_end;
 extern  unsigned int   sng_play_code;
 extern  int            sound_mono_fg;
 extern  unsigned int   keyd;
 extern  unsigned char  se_header[0x2800];
-extern  WAVE_W         voice_tbl[256];
+extern  WAVE_W         voice_tbl[512];
+extern  WAVE_W         voice_exp_tbl[256];
 extern  unsigned char *mptr;
 extern  int            se_rev_on;
 extern  SOUND_W       *sptr;
 extern  SPU_TRACK_REG  spu_tr_wk[SD_N_VOICES];
-extern  int            sng_kaihi_fadein_time;
 extern  int            sng_master_vol[SD_BGM_VOICES];
+extern  unsigned int   skip_intro_loop;
 
 #endif // _SD_EXT_H_

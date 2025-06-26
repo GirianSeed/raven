@@ -99,7 +99,7 @@ static void (*cntl_tbl[128])(void) = {
     /* 0x59 */ rrs_set,
     /* 0x5a */ no_cmd,
     /* 0x5b */ no_cmd,
-    /* 0x5c */ no_cmd,
+    /* 0x5c */ ofs_set,
     /* 0x5d */ pan_set,
     /* 0x5e */ pan_move,
     /* 0x5f */ trans_set,
@@ -120,7 +120,7 @@ static void (*cntl_tbl[128])(void) = {
     /* 0x6e */ kakko_end,
     /* 0x6f */ no_cmd,
     /* 0x70 */ no_cmd,
-    /* 0x71 */ use_set,
+    /* 0x71 */ env_set,
     /* 0x72 */ rest_set,
     /* 0x73 */ tie_set,
     /* 0x74 */ echo_set1,
@@ -167,20 +167,8 @@ static unsigned char VIBX_TBL[32] = {
 
 int sound_sub(void)
 {
-    int fade;
-
     key_fg = 0;
     sptr->tmpd += sptr->tmp;
-
-    if (mtrack < SD_BGM_VOICES && sng_kaihi_fadein_time != 0)
-    {
-        fade = sng_kaihi_fadein_time >> 5;
-
-        if (fade < sptr->tmp)
-        {
-            sptr->tmpd -= fade;
-        }
-    }
 
     if (sptr->tmpd > 0xff)
     {
@@ -200,16 +188,19 @@ int sound_sub(void)
         tempo_ch();
         bendch();
         vol_compute();
+
+        // fader_automation1();
     }
     else
     {
         note_cntl();
     }
 
-    if (key_fg)
+    // fader_automation2();
+
+    if (key_fg && sptr->snos < 0x100)
     {
         keyon();
-        return 0;
     }
 
     return 0;
@@ -403,7 +394,6 @@ void note_compute(void)
 
 void vol_compute(void)
 {
-    int          mult;
     unsigned int depth;
 
     if (sptr->pvoc != 0)
@@ -429,18 +419,17 @@ void vol_compute(void)
             if (sptr->trehs == sptr->trehc)
             {
                 sptr->trec += sptr->trecad;
-                mult = sptr->trec;
-                if (mult < 0)
+                if (sptr->trec < 0)
                 {
-                    depth = sptr->tred * -mult;
+                    depth = sptr->tred * -sptr->trec;
                 }
-                else if (mult == 0)
+                else if (sptr->trec == 0)
                 {
                     depth = 1;
                 }
                 else
                 {
-                    depth = sptr->tred * mult;
+                    depth = sptr->tred * sptr->trec;
                 }
             }
             else
@@ -449,8 +438,10 @@ void vol_compute(void)
                 depth = 0;
             }
         }
+
         volxset(depth >> 8);
     }
+
     pan_generate();
 }
 
@@ -816,6 +807,7 @@ void tempo_ch(void)
         {
             sptr->tmpw += sptr->tmpad;
         }
+
         sptr->tmp = sptr->tmpw >> 8;
     }
 }
@@ -834,11 +826,11 @@ void volxset(unsigned char depth)
     {
         vol = 0;
     }
-    else if (vol >= 128)
+    else if (vol > 127)
     {
         vol = 127;
     }
 
     pvod = (sptr->pvod >> 8) & 0xFF;
-    vol_set(((pvod * vol) >> 8) & 0xFF);
+    vol_set(((pvod * vol + 0x80) >> 8) & 0xFF);
 }
