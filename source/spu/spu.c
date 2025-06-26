@@ -4,6 +4,7 @@
 #include "common.h"
 
 #include <assert.h>
+#include <stdio.h>
 #include <string.h>
 
 #define SPU_ADPCM_LOOP_END   0x100
@@ -561,6 +562,11 @@ void spu_write(unsigned int addr, char *ptr, unsigned int size)
 
 void spu_set_voice_volume(int num, unsigned short l, unsigned short r)
 {
+    if (l & 0x8000 || r & 0x8000)
+    {
+        printf("warning: unsupported volume envelope on voice %d\n", num);
+    }
+
     spu_voices[num].voll = l & 0x7fff;
     spu_voices[num].volr = r & 0x7fff;
 }
@@ -657,6 +663,11 @@ void spu_set_key_off(unsigned int keys)
 
 void spu_set_master_volume(unsigned short l, unsigned short r)
 {
+    if (l & 0x8000 || r & 0x8000)
+    {
+        printf("warning: unsupported master volume envelope\n");
+    }
+
     mvoll = l & 0x7fff;
     mvolr = r & 0x7fff;
 }
