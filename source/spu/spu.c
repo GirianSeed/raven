@@ -156,9 +156,7 @@ static short interp_table[] =
 static void spu_set_adsr(spu_voice *voice)
 {
     int rate;
-
-    // TODO: clamping is apparently disabled when rate != max, but breaks drums
-    // int clamp;
+    int clamp;
 
     int increasing;
     int exponential;
@@ -169,21 +167,21 @@ static void spu_set_adsr(spu_voice *voice)
     {
     case SPU_STEP_ATTACK:
         rate = voice->ar;
-        // clamp = voice->ar != 0x7f;
+        clamp = voice->ar != 0x7f;
         increasing = 1;
         exponential = voice->a_mode == SPU_ADSR_EXP_INC;
         break;
 
     case SPU_STEP_DECAY:
         rate = voice->dr << 2;
-        // clamp = voice->dr != 0xf;
+        clamp = 1; // decay always clamps
         increasing = 0;
         exponential = 1;
         break;
 
     case SPU_STEP_SUSTAIN:
         rate = voice->sr;
-        // clamp = voice->sr != 0x7f;
+        clamp = voice->sr != 0x7f;
         increasing = voice->s_mode == SPU_ADSR_LIN_INC || voice->s_mode == SPU_ADSR_EXP_INC;
         exponential = voice->s_mode == SPU_ADSR_EXP_INC || voice->s_mode == SPU_ADSR_EXP_DEC;
         break;
@@ -191,7 +189,7 @@ static void spu_set_adsr(spu_voice *voice)
     case SPU_STEP_RELEASE:
     case SPU_STEP_OFF:
         rate = voice->rr << 2;
-        // clamp = voice->rr != 0x1f;
+        clamp = voice->rr != 0x1f;
         increasing = 0;
         exponential = voice->r_mode == SPU_ADSR_EXP_DEC;
         break;
@@ -214,10 +212,10 @@ static void spu_set_adsr(spu_voice *voice)
     {
         increment >>= (rate >> 2) - 11;
 
-        // if (clamp)
-        // {
-        //     increment = MAX(increasing, 1);
-        // }
+        if (clamp)
+        {
+            increment = MAX(increment, 1);
+        }
     }
 
     voice->env_counter = 0;
