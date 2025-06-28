@@ -30,7 +30,7 @@
 })
 
 /* sd_main.c */
-void sd_init(int debug, int loop);
+void sd_init(int debug, int loop, int reverb);
 void sd_term(void);
 void sd_tick(void);
 

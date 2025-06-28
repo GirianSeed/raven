@@ -22,10 +22,11 @@ int main(int argc, char **argv)
     const char *output = "output.wav";
     int loops = 1;
     int song = 1;
+    int reverb = 1;
 
     if (argc < 2)
     {
-        printf("usage: raven [-d] [-o output] [-l loops] [-s song] mdx wvx [wvx2] [wvx3]\n");
+        printf("usage: raven [-d] [-r] [-o output] [-l loops] [-s song] mdx wvx [wvx2] [wvx3]\n");
         return 1;
     }
 
@@ -34,6 +35,12 @@ int main(int argc, char **argv)
         if (strcmp(argv[i], "-d") == 0)
         {
             debug = 1;
+            continue;
+        }
+
+        if (strcmp(argv[i], "-r") == 0)
+        {
+            reverb = 0;
             continue;
         }
 
@@ -103,7 +110,7 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    sd_init(debug, loops);
+    sd_init(debug, loops, reverb);
     sd_sng_data_load(mdx);
     sd_wav_data_load(wvx[0]);
 

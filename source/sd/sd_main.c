@@ -9,13 +9,18 @@
 int sd_debug_mode;
 int sng_loop_cnt[SD_BGM_VOICES];
 
-static void sd_init_reverb(void)
+static void sd_init_reverb(int enable)
 {
     spu_set_reverb_enable(0);
     spu_reverb_clear();
     spu_set_reverb_mode(SPU_REV_MODE_STUDIO_C);
     spu_set_reverb_depth(0x4000, 0x4000);
-    spu_set_reverb_enable(1);
+
+    if (enable)
+    {
+        spu_set_reverb_enable(1);
+    }
+
     spu_set_reverb_on(SD_BGM_MASK);
 
     eoffs = 0;
@@ -27,7 +32,7 @@ static void sd_init_volume(void)
     spu_set_master_volume(0x3fff, 0x3fff);
 }
 
-void sd_init(int debug, int loops)
+void sd_init(int debug, int loops, int reverb)
 {
     sd_debug_mode = debug;
 
@@ -43,7 +48,7 @@ void sd_init(int debug, int loops)
 
     spu_init();
 
-    sd_init_reverb();
+    sd_init_reverb(reverb);
     sd_init_volume();
 
     init_sng_work();
