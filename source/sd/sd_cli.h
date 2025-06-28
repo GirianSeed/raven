@@ -11,7 +11,7 @@ int sd_set_cli(int sound_code, int sync_mode);
 int sd_sng_code(void);
 
 /* sd_main.c */
-void sd_init(int debug, int loop);
+void sd_init(int debug, int loop, int reverb);
 void sd_term(void);
 void sd_tick(void);
 
