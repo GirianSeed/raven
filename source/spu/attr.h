@@ -115,16 +115,16 @@ static reverb_attr reverb_mode_attr[SPU_REV_MODE_MAX] =
 
 static unsigned int reverb_work_area_size[SPU_REV_MODE_MAX] =
 {
-    128,    /* off */
-    9920,  /* room */
-    8000,  /* studio a */
-    18496, /* studio b */
-    28640, /* studio c */
-    44512, /* hall */
-    63168, /* space */
-    98368, /* echo */
-    98368, /* delay */
-    15360  /* pipe */
+    64,    /* off */
+    4960,  /* room */
+    4000,  /* studio a */
+    9248,  /* studio b */
+    14320, /* studio c */
+    22256, /* hall */
+    31584, /* space */
+    49184, /* echo */
+    49184, /* delay */
+    7680   /* pipe */
 };
 
 #endif /* _ATTR_H_ */

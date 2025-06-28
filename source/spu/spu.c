@@ -67,12 +67,15 @@ static unsigned int rsize; /* reverb work area size */
 static reverb_attr rattr;  /* reverb attributes */
 static unsigned int raddr; /* reverb index */
 
+static short last_rev_l;
+static short last_rev_r;
+
 static int endx; /* bitmask of ended voices */
 
 static spu_voice spu_voices[SPU_NCH];
 
-static unsigned short waveform_data[0x100000];  /* 2 MiB matches PS2 */
-static unsigned short reverb_work_area[0x18040]; /* based on max size */
+static unsigned short waveform_data[0x100000]; /* 2 MiB matches PS2 */
+static unsigned short reverb_work_area[49184]; /* based on max size */
 
 static size_t output_index;
 
@@ -450,7 +453,7 @@ static void spu_reverb_write(unsigned int addr, float value)
     reverb_work_area[(raddr + addr) % rsize] = f32_to_i16(value);
 }
 
-static void spu_process_reverb(int *l, int *r)
+static void spu_process_reverb(int l, int r)
 {
     float in;
     float same;
@@ -458,116 +461,118 @@ static void spu_process_reverb(int *l, int *r)
     float out;
     float temp;
 
-    /* apply reverb volume to input */
-    in = i16_to_f32(*l) * i16_to_f32(rattr.lin);
+    if (!(output_index & 1))
+    {
+        /* apply reverb volume to input */
+        in = i16_to_f32(l) * i16_to_f32(rattr.lin);
 
-    /* apply same-side reflection */
-    temp = spu_reverb_read(rattr.lsamed * 4);
-    same = in + temp * i16_to_f32(rattr.wall);
+        /* apply same-side reflection */
+        temp = spu_reverb_read(rattr.lsamed * 4);
+        same = in + temp * i16_to_f32(rattr.wall);
 
-    temp = spu_reverb_read(rattr.lsamem * 4 - 1);
-    same = temp + (same - temp) * i16_to_f32(rattr.iir);
+        temp = spu_reverb_read(rattr.lsamem * 4 - 1);
+        same = temp + (same - temp) * i16_to_f32(rattr.iir);
 
-    spu_reverb_write(rattr.lsamem * 4, same);
+        spu_reverb_write(rattr.lsamem * 4, same);
 
-    /* apply opposite-side reflection */
-    temp = spu_reverb_read(rattr.rdiffd * 4);
-    diff = in + temp * i16_to_f32(rattr.wall);
+        /* apply opposite-side reflection */
+        temp = spu_reverb_read(rattr.rdiffd * 4);
+        diff = in + temp * i16_to_f32(rattr.wall);
 
-    temp = spu_reverb_read(rattr.ldiffm * 4 - 1);
-    diff = temp + (diff - temp) * i16_to_f32(rattr.iir);
+        temp = spu_reverb_read(rattr.ldiffm * 4 - 1);
+        diff = temp + (diff - temp) * i16_to_f32(rattr.iir);
 
-    spu_reverb_write(rattr.ldiffm * 4, diff);
+        spu_reverb_write(rattr.ldiffm * 4, diff);
 
-    /* apply early echo */
-    temp = spu_reverb_read(rattr.lcomb1 * 4);
-    out = temp * i16_to_f32(rattr.comb1);
+        /* apply early echo */
+        temp = spu_reverb_read(rattr.lcomb1 * 4);
+        out = temp * i16_to_f32(rattr.comb1);
 
-    temp = spu_reverb_read(rattr.lcomb2 * 4);
-    out += temp * i16_to_f32(rattr.comb2);
+        temp = spu_reverb_read(rattr.lcomb2 * 4);
+        out += temp * i16_to_f32(rattr.comb2);
 
-    temp = spu_reverb_read(rattr.lcomb3 * 4);
-    out += temp * i16_to_f32(rattr.comb3);
+        temp = spu_reverb_read(rattr.lcomb3 * 4);
+        out += temp * i16_to_f32(rattr.comb3);
 
-    temp = spu_reverb_read(rattr.lcomb4 * 4);
-    out += temp * i16_to_f32(rattr.comb4);
+        temp = spu_reverb_read(rattr.lcomb4 * 4);
+        out += temp * i16_to_f32(rattr.comb4);
 
-    /* apply first reverb apf */
-    temp = spu_reverb_read((rattr.lapf1 - rattr.apfd1) * 4);
-    out -= temp * i16_to_f32(rattr.apfv1);
+        /* apply first reverb apf */
+        temp = spu_reverb_read((rattr.lapf1 - rattr.apfd1) * 4);
+        out -= temp * i16_to_f32(rattr.apfv1);
 
-    spu_reverb_write(rattr.lapf1 * 4, out);
+        spu_reverb_write(rattr.lapf1 * 4, out);
 
-    out = out * i16_to_f32(rattr.apfv1) + temp;
+        out = out * i16_to_f32(rattr.apfv1) + temp;
 
-    /* apply second reverb apf */
-    temp = spu_reverb_read((rattr.lapf2 - rattr.apfd2) * 4);
-    out -= temp * i16_to_f32(rattr.apfv2);
+        /* apply second reverb apf */
+        temp = spu_reverb_read((rattr.lapf2 - rattr.apfd2) * 4);
+        out -= temp * i16_to_f32(rattr.apfv2);
 
-    spu_reverb_write(rattr.lapf2 * 4, out);
+        spu_reverb_write(rattr.lapf2 * 4, out);
 
-    out = out * i16_to_f32(rattr.apfv2) + temp;
+        out = out * i16_to_f32(rattr.apfv2) + temp;
 
-    /* apply output volume */
-    out = out * i16_to_f32(rvoll);
-    *l = f32_to_i16(out);
+        /* apply output volume */
+        out = out * i16_to_f32(rvoll);
+        last_rev_l = f32_to_i16(out);
+    }
+    else
+    {
+       /* apply reverb volume to input */
+        in = i16_to_f32(r) * i16_to_f32(rattr.rin);
 
-    /* increment the reverb index */
-    raddr = (raddr + 1) % rsize;
+        /* apply same-side reflection */
+        temp = spu_reverb_read(rattr.rsamed * 4);
+        same = in + temp * i16_to_f32(rattr.wall);
 
-    /* apply reverb volume to input */
-    in = i16_to_f32(*r) * i16_to_f32(rattr.rin);
+        temp = spu_reverb_read(rattr.rsamem * 4 - 1);
+        same = temp + (same - temp) * i16_to_f32(rattr.iir);
 
-    /* apply same-side reflection */
-    temp = spu_reverb_read(rattr.rsamed * 4 + rsize);
-    same = in + temp * i16_to_f32(rattr.wall);
+        spu_reverb_write(rattr.rsamem * 4, same);
 
-    temp = spu_reverb_read(rattr.rsamem * 4 + rsize - 1);
-    same = temp + (same - temp) * i16_to_f32(rattr.iir);
+        /* apply opposite-side reflection */
+        temp = spu_reverb_read(rattr.ldiffd * 4);
+        diff = in + temp * i16_to_f32(rattr.wall);
 
-    spu_reverb_write(rattr.rsamem * 4 + rsize, same);
+        temp = spu_reverb_read(rattr.rdiffm * 4 - 1);
+        diff = temp + (diff - temp) * i16_to_f32(rattr.iir);
 
-    /* apply opposite-side reflection */
-    temp = spu_reverb_read(rattr.ldiffd * 4 + rsize);
-    diff = in + temp * i16_to_f32(rattr.wall);
+        spu_reverb_write(rattr.rdiffm * 4, diff);
 
-    temp = spu_reverb_read(rattr.rdiffm * 4 + rsize - 1);
-    diff = temp + (diff - temp) * i16_to_f32(rattr.iir);
+        /* apply early echo */
+        temp = spu_reverb_read(rattr.rcomb1 * 4);
+        out = temp * i16_to_f32(rattr.comb1);
 
-    spu_reverb_write(rattr.rdiffm * 4 + rsize, diff);
+        temp = spu_reverb_read(rattr.rcomb2 * 4);
+        out += temp * i16_to_f32(rattr.comb2);
 
-    /* apply early echo */
-    temp = spu_reverb_read(rattr.rcomb1 * 4 + rsize);
-    out = temp * i16_to_f32(rattr.comb1);
+        temp = spu_reverb_read(rattr.rcomb3 * 4);
+        out += temp * i16_to_f32(rattr.comb3);
 
-    temp = spu_reverb_read(rattr.rcomb2 * 4 + rsize);
-    out += temp * i16_to_f32(rattr.comb2);
+        temp = spu_reverb_read(rattr.rcomb4 * 4);
+        out += temp * i16_to_f32(rattr.comb4);
 
-    temp = spu_reverb_read(rattr.rcomb3 * 4 + rsize);
-    out += temp * i16_to_f32(rattr.comb3);
+        /* apply first reverb apf */
+        temp = spu_reverb_read((rattr.rapf1 - rattr.apfd1) * 4);
+        out -= temp * i16_to_f32(rattr.apfv1);
 
-    temp = spu_reverb_read(rattr.rcomb4 * 4 + rsize);
-    out += temp * i16_to_f32(rattr.comb4);
+        spu_reverb_write(rattr.rapf1 * 4, out);
 
-    /* apply first reverb apf */
-    temp = spu_reverb_read((rattr.rapf1 - rattr.apfd1) * 4 + rsize);
-    out -= temp * i16_to_f32(rattr.apfv1);
+        out = out * i16_to_f32(rattr.apfv1) + temp;
 
-    spu_reverb_write(rattr.rapf1 * 4 + rsize, out);
+        /* apply second reverb apf */
+        temp = spu_reverb_read((rattr.rapf2 - rattr.apfd2) * 4);
+        out -= temp * i16_to_f32(rattr.apfv2);
 
-    out = out * i16_to_f32(rattr.apfv1) + temp;
+        spu_reverb_write(rattr.rapf2 * 4, out);
 
-    /* apply second reverb apf */
-    temp = spu_reverb_read((rattr.rapf2 - rattr.apfd2) * 4 + rsize);
-    out -= temp * i16_to_f32(rattr.apfv2);
+        out = out * i16_to_f32(rattr.apfv2) + temp;
 
-    spu_reverb_write(rattr.rapf2 * 4 + rsize, out);
-
-    out = out * i16_to_f32(rattr.apfv2) + temp;
-
-    /* apply output volume */
-    out = out * i16_to_f32(rvolr);
-    *r = f32_to_i16(out);
+        /* apply output volume */
+        out = out * i16_to_f32(rvolr);
+        last_rev_r = f32_to_i16(out);
+    }
 
     /* increment the reverb index */
     raddr = (raddr + 1) % rsize;
@@ -606,11 +611,11 @@ static void spu_tick(short *output)
 
     if (ren)
     {
-        spu_process_reverb(&wetl, &wetr);
+        spu_process_reverb(wetl, wetr);
     }
 
-    outl = spu_saturate(dryl + wetl);
-    outr = spu_saturate(dryr + wetr);
+    outl = spu_saturate(dryl + last_rev_l);
+    outr = spu_saturate(dryr + last_rev_r);
 
     output[output_index++] = apply_volume(outl, mvoll << 1);
     output[output_index++] = apply_volume(outr, mvolr << 1);
@@ -653,7 +658,7 @@ void spu_init(void)
     }
 
     ren = 0;
-    rsize = 128;
+    rsize = 64;
     raddr = 0;
 }
 
