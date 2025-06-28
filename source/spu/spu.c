@@ -20,6 +20,11 @@ enum
     SPU_STEP_OFF,
 };
 
+#define BLOCK_SIZE    28
+#define PREV_SAMPLES  3
+#define BLOCK_SAMPLES (BLOCK_SIZE + PREV_SAMPLES)
+
+
 typedef struct spu_voice
 {
     short voll, volr;   /* volume left/right */
@@ -49,12 +54,11 @@ typedef struct spu_voice
     unsigned int addr; /* sample address */
     unsigned int lsa;  /* loop start address */
 
-    short block_samples[28];
+    short block_samples[BLOCK_SAMPLES];
     unsigned short block_header;
     int has_block;
 
     short adpcm_hist[2];
-    short interp_hist[3];
 } spu_voice;
 
 static short mvoll, mvolr; /* master volume left/right */
@@ -312,7 +316,6 @@ static void spu_load_block(spu_voice *voice)
     int filt0, filt1;
     unsigned short word;
     int sample;
-    int diff;
 
     addr = voice->addr * 4;
     header = waveform_data[addr++];
@@ -332,6 +335,11 @@ static void spu_load_block(spu_voice *voice)
     filt0 = adpcm_filters[filter][0];
     filt1 = adpcm_filters[filter][1];
 
+    // Save the last 3 samples from the previous block for interpolation
+    voice->block_samples[0] = voice->block_samples[BLOCK_SAMPLES - 3];
+    voice->block_samples[1] = voice->block_samples[BLOCK_SAMPLES - 2];
+    voice->block_samples[2] = voice->block_samples[BLOCK_SAMPLES - 1];
+
     for (int w = 0; w < 7; w++)
     {
         word = waveform_data[addr++];
@@ -343,25 +351,22 @@ static void spu_load_block(spu_voice *voice)
 
             word >>= 4;
 
-            diff = 0;
-            diff += voice->adpcm_hist[0] * filt0;
-            diff += voice->adpcm_hist[1] * filt1;
-
-            sample = spu_saturate(sample + (diff + 32) / 64);
+            sample += (voice->adpcm_hist[0] * filt0) >> 6;
+            sample += (voice->adpcm_hist[1] * filt1) >> 6;
+            sample = spu_saturate(sample);
 
             voice->adpcm_hist[1] = voice->adpcm_hist[0];
             voice->adpcm_hist[0] = sample;
 
-            voice->block_samples[w * 4 + i] = sample;
+            voice->block_samples[PREV_SAMPLES + w * 4 + i] = sample;
         }
     }
 }
 
 static short spu_sample(spu_voice *voice)
 {
-    int sample_index;
-    int interp_index;
     int sample;
+    int interp;
     int output;
 
     if (!voice->has_block)
@@ -370,22 +375,15 @@ static short spu_sample(spu_voice *voice)
         voice->has_block = 1;
     }
 
-    sample_index = voice->pitch_counter >> 12;
-    interp_index = (voice->pitch_counter >> 4) & 0xff;
+    sample = (voice->pitch_counter >> 12) + PREV_SAMPLES;
+    interp = (voice->pitch_counter >> 4) & 0xff;
 
-    sample = voice->block_samples[sample_index];
+    output  = interp_table[255 - interp] * voice->block_samples[sample - 3];
+    output += interp_table[511 - interp] * voice->block_samples[sample - 2];
+    output += interp_table[256 + interp] * voice->block_samples[sample - 1];
+    output += interp_table[interp] * voice->block_samples[sample];
 
-    output = 0;
-    output += (interp_table[255 - interp_index] * voice->interp_hist[2]) >> 15;
-    output += (interp_table[511 - interp_index] * voice->interp_hist[1]) >> 15;
-    output += (interp_table[256 + interp_index] * voice->interp_hist[0]) >> 15;
-    output += (interp_table[interp_index] * sample) >> 15;
-
-    voice->interp_hist[2] = voice->interp_hist[1];
-    voice->interp_hist[1] = voice->interp_hist[0];
-    voice->interp_hist[0] = sample;
-
-    return output;
+    return output >> 15;
 }
 
 static void spu_update_pitch(spu_voice *voice)
@@ -810,9 +808,7 @@ void spu_set_key_on(unsigned int keys)
             spu_voices[i].adpcm_hist[0] = 0;
             spu_voices[i].adpcm_hist[1] = 0;
 
-            spu_voices[i].interp_hist[0] = 0;
-            spu_voices[i].interp_hist[1] = 0;
-            spu_voices[i].interp_hist[2] = 0;
+            memset(spu_voices[i].block_samples, 0, sizeof(spu_voices[i].block_samples));
         }
     }
 }
