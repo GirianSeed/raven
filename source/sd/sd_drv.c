@@ -39,6 +39,7 @@ SETBL2        *se_exp_table;
 unsigned int   keyoffs;
 unsigned char  sng_data[0x4000];
 unsigned int   song_end;
+unsigned int   song_loop_end;
 unsigned int   sng_play_code;
 int            sound_mono_fg;
 unsigned int   keyd;
@@ -244,6 +245,7 @@ void IntSdMain(void)
                     if (!sptr->mpointer)
                     {
                         song_end |= keyd;
+                        song_loop_end |= keyd;
                     }
                     else
                     {
@@ -252,6 +254,7 @@ void IntSdMain(void)
                         if (sound_sub())
                         {
                             song_end |= keyd;
+                            song_loop_end |= keyd;
                             sptr->mpointer = 0;
                         }
                         else
@@ -263,6 +266,16 @@ void IntSdMain(void)
             }
 
             dword_800BEFF8 = song_end;
+
+            if ((song_loop_end & SD_BGM_MASK) == SD_BGM_MASK)
+            {
+                song_loop_end = song_end;
+
+                if (--song_loop_count < 0)
+                {
+                    song_end = SD_BGM_MASK;
+                }
+            }
 
             if ((song_end & SD_BGM_MASK) == SD_BGM_MASK)
             {
@@ -699,6 +712,7 @@ void sng_adrs_set(int num)
     song_addr += sng_data[(num & 0xF) * 4];
 
     song_end &= ~SD_BGM_MASK;
+    song_loop_end &= ~SD_BGM_MASK;
 
     for (int i = 0; i < SD_BGM_VOICES; i++)
     {
@@ -714,6 +728,7 @@ void sng_adrs_set(int num)
         else
         {
             song_end |= 1 << i;
+            song_loop_end |= 1 << i;
         }
     }
 

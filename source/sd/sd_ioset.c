@@ -119,6 +119,7 @@ void sound_off(void)
         spu_tr_wk[i].env3_fg = 1;
 
         song_end |= 1 << mtrack;
+        song_loop_end |= 1 << mtrack;
     }
 
     keyoffs = 0x7FFFFF;
@@ -134,6 +135,7 @@ void sng_off(void)
     }
 
     song_end |= SD_BGM_MASK;
+    song_loop_end |= SD_BGM_MASK;
     keyoffs |= SD_BGM_MASK;
 }
 
