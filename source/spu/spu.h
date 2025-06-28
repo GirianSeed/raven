@@ -22,14 +22,10 @@
 #define SPU_REV_MODE_PIPE     9
 #define SPU_REV_MODE_MAX      10
 
-#define SPU_STEP_SIZE         240
-
-typedef void (*spu_output_sample_fn_t)(void *userdata, const short *samples, size_t size);
-
 void spu_init(void);
 void spu_quit(void);
 
-void spu_step(spu_output_sample_fn_t output, void *userdata);
+void spu_step(int step_size, short *output);
 
 int spu_endx(void);
 
