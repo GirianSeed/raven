@@ -239,7 +239,7 @@ static void spu_tick_adsr(spu_voice *voice)
     {
         if (voice->env_increasing)
         {
-            if (voice->env > 0x6000)
+            if (voice->env >= 0x6000)
             {
                 if (voice->env_rate < 40)
                 {
@@ -747,7 +747,7 @@ void spu_set_voice_address(int num, unsigned int addr)
 {
     assert((addr % 8) == 0);
     assert(addr < sizeof(waveform_data));
-    spu_voices[num].ssa = (addr + 7) / 8;
+    spu_voices[num].ssa = (addr + 0x7) >> 3;
 }
 
 void spu_set_voice_attack(int num, int mode, unsigned short rate)
@@ -798,7 +798,6 @@ void spu_set_key_on(unsigned int keys)
 
             spu_voices[i].step = SPU_STEP_ATTACK;
             spu_voices[i].addr = spu_voices[i].ssa;
-            spu_voices[i].lsa = spu_voices[i].ssa;
             spu_voices[i].env = 0;
             spu_voices[i].env_counter = 0;
             spu_voices[i].pitch_counter = 0;
