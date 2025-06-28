@@ -74,8 +74,7 @@ static spu_voice spu_voices[SPU_NCH];
 static unsigned short waveform_data[262144];
 static unsigned short reverb_work_area[98368]; /* based on max size */
 
-static short output_samples[SPU_STEP_SIZE * 2];
-static size_t output_sample_index;
+static size_t output_index;
 
 static int adpcm_filters[][2] =
 {
@@ -574,7 +573,7 @@ static void spu_process_reverb(int *l, int *r)
     raddr = (raddr + 1) % rsize;
 }
 
-static void spu_tick(void)
+static void spu_tick(short *output)
 {
     int dryl = 0;
     int dryr = 0;
@@ -613,8 +612,8 @@ static void spu_tick(void)
     outl = spu_saturate(dryl + wetl);
     outr = spu_saturate(dryr + wetr);
 
-    output_samples[output_sample_index++] = apply_volume(outl, mvoll << 1);
-    output_samples[output_sample_index++] = apply_volume(outr, mvolr << 1);
+    output[output_index++] = apply_volume(outl, mvoll << 1);
+    output[output_index++] = apply_volume(outr, mvolr << 1);
 }
 
 void spu_init(void)
@@ -663,16 +662,14 @@ void spu_quit(void)
     /* do nothing */
 }
 
-void spu_step(spu_output_sample_fn_t output, void *userdata)
+void spu_step(int step_size, short *output)
 {
-    output_sample_index = 0;
+    output_index = 0;
 
-    for (int i = 0; i < SPU_STEP_SIZE; i++)
+    for (int i = 0; i < step_size; i++)
     {
-        spu_tick();
+        spu_tick(output);
     }
-
-    output(userdata, output_samples, sizeof(output_samples));
 }
 
 int spu_endx(void)

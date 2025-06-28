@@ -8,15 +8,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-void output_samples(void *userdata, const short *samples, size_t size)
-{
-    vector *samplebuf = userdata;
-    vector_push(samplebuf, samples, size);
-}
+#define STEP_SIZE 448
 
 int main(int argc, char **argv)
 {
     vector samples;
+    short buffer[STEP_SIZE * 2];
 
     const char *mdx = NULL;
     const char *wvx[3] = {NULL, NULL, NULL};
@@ -126,7 +123,9 @@ int main(int argc, char **argv)
     do
     {
         sd_tick();
-        spu_step(output_samples, &samples);
+        spu_step(STEP_SIZE, buffer);
+
+        vector_push(&samples, buffer, sizeof(buffer));
     }
     while (sd_sng_play() || sd_se_play());
 
