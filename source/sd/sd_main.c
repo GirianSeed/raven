@@ -7,7 +7,7 @@
 #include <string.h>
 
 int sd_debug_mode;
-int sng_loop_cnt[SD_BGM_VOICES];
+int song_loop_count;
 
 static void sd_init_reverb(int enable)
 {
@@ -35,11 +35,7 @@ static void sd_init_volume(void)
 void sd_init(int debug, int loops, int reverb)
 {
     sd_debug_mode = debug;
-
-    for (int i = 0; i < SD_BGM_VOICES; i++)
-    {
-        sng_loop_cnt[i] = loops;
-    }
+    song_loop_count = loops;
 
     memset(voice_tbl, 0xff, sizeof(voice_tbl));
     memset(voice_exp_tbl, 0xff, sizeof(voice_exp_tbl));

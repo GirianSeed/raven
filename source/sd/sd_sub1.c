@@ -220,7 +220,7 @@ int tx_read(void)
         }
 
         mdata1 = mptr[3];
-        if (!mdata1)
+        if (mdata1 == 0)
         {
             return 1;
         }
@@ -261,6 +261,7 @@ int tx_read(void)
             note_set();
         }
     }
+
     return 0;
 }
 

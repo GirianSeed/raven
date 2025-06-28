@@ -214,9 +214,9 @@ void l3s_set(void)
 
 void l3e_set(void)
 {
-    sng_loop_cnt[mtrack]--;
+    song_loop_end |= keyd;
 
-    if (sng_loop_cnt[mtrack] > 0 && sptr->lp3_addr)
+    if (sptr->lp3_addr)
     {
         mptr = sptr->lp3_addr;
     }

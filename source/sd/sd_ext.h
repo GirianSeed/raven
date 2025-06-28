@@ -138,7 +138,6 @@ extern SETBL se_tbl[128];
 
 /*---------------------------------------------------------------------------*/
 extern  int            sd_debug_mode;
-extern  int            sng_loop_cnt[SD_BGM_VOICES];
 extern  int            se_tracks;
 extern  int            sd_sng_code_buf[16];
 extern  int            eons;
@@ -160,6 +159,8 @@ extern  SETBL2        *se_exp_table;
 extern  unsigned int   keyoffs;
 extern  unsigned char  sng_data[0x20000];
 extern  unsigned int   song_end;
+extern  unsigned int   song_loop_end;
+extern  int            song_loop_count;
 extern  unsigned int   sng_play_code;
 extern  int            sound_mono_fg;
 extern  unsigned int   keyd;

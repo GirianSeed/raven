@@ -160,6 +160,7 @@ void sng_off(void)
     }
 
     song_end |= SD_BGM_MASK;
+    song_loop_end |= SD_BGM_MASK;
     keyoffs |= SD_BGM_MASK;
 }
 
