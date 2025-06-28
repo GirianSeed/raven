@@ -359,12 +359,18 @@ void echo_set2(void)
 
 void eon_set(void)
 {
-    /* do nothing */
+    if (mtrack < SD_BGM_VOICES)
+    {
+        eons |= keyd;
+    }
 }
 
 void eof_set(void)
 {
-    /* do nothing */
+    if (mtrack < SD_BGM_VOICES)
+    {
+        eoffs |= keyd;
+    }
 }
 
 void kakko_start(void)
