@@ -39,7 +39,8 @@ typedef struct reverb_attr
     unsigned short rin;
 } reverb_attr;
 
-static reverb_attr reverb_mode_attr[SPU_REV_MODE_MAX] = {
+static reverb_attr reverb_mode_attr[SPU_REV_MODE_MAX] =
+{
     /* off */
     {
         0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
@@ -59,7 +60,7 @@ static reverb_attr reverb_mode_attr[SPU_REV_MODE_MAX] = {
         0x0033, 0x0025, 0x70F0, 0x4FA8, 0xBCE0, 0x4410, 0xC0F0, 0x9C00,
         0x5280, 0x4EC0, 0x03E4, 0x031B, 0x03A4, 0x02AF, 0x0372, 0x0266,
         0x031C, 0x025D, 0x025C, 0x018E, 0x022F, 0x0135, 0x01D2, 0x00B7,
-        0x018F, 0x00B5, 0x00B4, 0x0080, 0x004C, 0x0026, 0x8000,  0x8000
+        0x018F, 0x00B5, 0x00B4, 0x0080, 0x004C, 0x0026, 0x8000, 0x8000
     },
     /* studio b */
     {
@@ -112,8 +113,9 @@ static reverb_attr reverb_mode_attr[SPU_REV_MODE_MAX] = {
     },
 };
 
-static unsigned int reverb_work_area_size[SPU_REV_MODE_MAX] = {
-    16,    /* off */
+static unsigned int reverb_work_area_size[SPU_REV_MODE_MAX] =
+{
+    128,    /* off */
     9920,  /* room */
     8000,  /* studio a */
     18496, /* studio b */
