@@ -459,7 +459,7 @@ static void spu_process_reverb(int l, int r)
     float out;
     float temp;
 
-    if (!(output_index & 1))
+    if (!(output_index & 2))
     {
         /* apply reverb volume to input */
         in = i16_to_f32(l) * i16_to_f32(rattr.lin);
