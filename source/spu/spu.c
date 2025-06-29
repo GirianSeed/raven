@@ -687,7 +687,7 @@ void spu_set_reverb_enable(int enable)
 
 void spu_set_reverb_mode(int mode)
 {
-    assert(mode == SPU_REV_MODE_STUDIO_C);
+    assert(mode == SPU_REV_MODE_HALL);
     assert(ren == 0);
 
     rvoll = 0;

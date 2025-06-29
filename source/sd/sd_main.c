@@ -13,8 +13,8 @@ static void sd_init_reverb(int enable)
 {
     spu_set_reverb_enable(0);
     spu_reverb_clear();
-    spu_set_reverb_mode(SPU_REV_MODE_STUDIO_C);
-    spu_set_reverb_depth(0x4000, 0x4000);
+    spu_set_reverb_mode(SPU_REV_MODE_HALL);
+    spu_set_reverb_depth(0x2000, 0x2000);
 
     if (enable)
     {
