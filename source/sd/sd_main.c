@@ -8,6 +8,7 @@
 
 int sd_debug_mode;
 int song_loop_count;
+unsigned int sd_drum_index;
 
 static void sd_init_reverb(int enable)
 {
@@ -38,7 +39,6 @@ void sd_init(int debug, int loops, int reverb)
     song_loop_count = loops;
 
     memset(voice_tbl, 0xff, sizeof(voice_tbl));
-    memset(voice_exp_tbl, 0xff, sizeof(voice_exp_tbl));
     memset(spu_tr_wk, 0, sizeof(spu_tr_wk));
 
     SD_PRINT("SD:START\n");
@@ -70,6 +70,8 @@ void sd_init(int debug, int loops, int reverb)
         mix_fader[i].target = 0;
         mix_fader[i].pan = 32;
     }
+
+    sd_drum_index = -1;
 
     se_exp_table = (SETBL2 *)se_header;
     se_data  = (unsigned char *)(se_exp_table + 128);

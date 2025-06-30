@@ -34,6 +34,9 @@ static int sd_wav_data_load(FILE *fp, size_t size)
 {
     WAVE_H header;
     size_t rb;
+    unsigned int last_addr;
+    unsigned int entry;
+    unsigned int addr;
     char *data;
 
     (void)size;
@@ -58,6 +61,22 @@ static int sd_wav_data_load(FILE *fp, size_t size)
     {
         SD_PRINT("ERROR:unable to read wave table\n");
         return 1;
+    }
+
+    last_addr = 0;
+    for (unsigned int i = 0; i < header.size; i += 16)
+    {
+        entry = (header.offset + i) / 16;
+        addr = voice_tbl[entry].addr;
+
+        if (addr < last_addr)
+        {
+            SD_PRINT("drum start found at entry %u\n", entry);
+            sd_drum_index = entry;
+            break;
+        }
+
+        last_addr = addr;
     }
 
     /* read wave data header */

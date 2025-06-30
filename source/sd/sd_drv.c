@@ -44,7 +44,6 @@ int            sound_mono_fg;
 unsigned int   keyd;
 unsigned char  se_header[0x2800];
 WAVE_W         voice_tbl[512];
-WAVE_W         voice_exp_tbl[256];
 unsigned char *mptr;
 int            se_rev_on;
 SOUND_W       *sptr;

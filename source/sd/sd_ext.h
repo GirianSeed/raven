@@ -179,7 +179,6 @@ extern  int            sound_mono_fg;
 extern  unsigned int   keyd;
 extern  unsigned char  se_header[0x2800];
 extern  WAVE_W         voice_tbl[512];
-extern  WAVE_W         voice_exp_tbl[256];
 extern  unsigned char *mptr;
 extern  int            se_rev_on;
 extern  SOUND_W       *sptr;
@@ -190,5 +189,6 @@ extern  FADER          mix_fader[SD_BGM_VOICES];
 extern  unsigned int   auto_phase_fg;
 extern  unsigned char  auto_env_pos;
 extern  unsigned char  auto_env_pos2;
+extern  unsigned int   sd_drum_index;
 
 #endif // _SD_EXT_H_
