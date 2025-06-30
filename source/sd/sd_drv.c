@@ -5,7 +5,7 @@
 
 static int sng_syukan_vol;
 static int sng_fadein_time;
-static int dword_800BF154;
+static int vox_on_vol;
 static int sng_fout_fg;
 static int sd_code_read;
 static int sng_kaihi_fg;
@@ -560,13 +560,13 @@ void SngFadeInt(void)
     }
     else
     {
-        if (dword_800BF154 != 0)
+        if (vox_on_vol != 0)
         {
-            dword_800BF154 -= 245;
+            vox_on_vol -= 122;
 
-            if (dword_800BF154 < 0)
+            if (vox_on_vol < 0)
             {
-                dword_800BF154 = 0;
+                vox_on_vol = 0;
             }
         }
 
@@ -618,20 +618,20 @@ void SngFadeInt(void)
         }
     }
 
-    if (dword_800BF154 <= sng_syukan_vol)
+    if (vox_on_vol <= sng_syukan_vol)
     {
         mod = sng_syukan_vol;
     }
     else
     {
-        mod = dword_800BF154;
+        mod = vox_on_vol;
     }
 
     for (int i = 0; i < SD_BGM_VOICES; i++)
     {
         vol = 0x10000;
 
-        if (mod < sng_fade_value[i])
+        if (sng_fade_value[i] > mod)
         {
             fade = sng_fade_value[i];
         }
@@ -640,7 +640,7 @@ void SngFadeInt(void)
             fade = mod;
         }
 
-        if (fade > vol)
+        if (vol < fade)
         {
             vol = 0;
         }
