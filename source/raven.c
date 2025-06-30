@@ -22,10 +22,11 @@ int main(int argc, char **argv)
     int loops = 1;
     int song = 1;
     int reverb = 1;
+    int phase = 0;
 
     if (argc < 2)
     {
-        printf("usage: raven [-d] [-r] [-o output] [-l loops] [-s song] sdx [sdx2]\n");
+        printf("usage: raven [-d] [-r] [-o output] [-l loops] [-s song] [-p phase] sdx [sdx2]\n");
         return 1;
     }
 
@@ -60,6 +61,13 @@ int main(int argc, char **argv)
         if (strcmp(argv[i], "-s") == 0)
         {
             song = atoi(argv[i + 1]);
+            i++; // skip value
+            continue;
+        }
+
+        if (strcmp(argv[i], "-p") == 0)
+        {
+            phase = atoi(argv[i + 1]);
             i++; // skip value
             continue;
         }
@@ -103,6 +111,12 @@ int main(int argc, char **argv)
     sd_set_cli(0x01000000 + song, SD_ASYNC); // song n
 
     sd_set_cli(0xFF0000FF, SD_ASYNC); // skip intro loop
+
+    if (phase != 0)
+    {
+        sd_set_cli(0xFF000100 + phase, SD_ASYNC); // phase n
+
+    }
 
     do
     {
