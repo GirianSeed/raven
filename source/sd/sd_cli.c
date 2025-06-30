@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-static int bgm_idx;
+static int sd_code_set;
 
 int sd_sng_play(void)
 {
@@ -141,6 +141,19 @@ static int SePlay(unsigned int sound_code)
     return 0;
 }
 
+static void set_sng_code_buf(unsigned int code)
+{
+    if (sd_sng_code_buf[sd_code_set] == 0)
+    {
+        sd_sng_code_buf[sd_code_set] = code;
+        sd_code_set = (sd_code_set + 1) & 0xF;
+        return;
+    }
+
+    SD_PRINT("***TooMuchBGMSoundCode(%x)***\n", code);
+}
+
+
 static void sd_set(unsigned int sound_code)
 {
     unsigned int mode;
@@ -157,14 +170,7 @@ static void sd_set(unsigned int sound_code)
     }
     else if (mode == 0x01000000)
     {
-        if (sd_sng_code_buf[bgm_idx] == 0)
-        {
-            sd_sng_code_buf[bgm_idx] = sound_code;
-            bgm_idx = (bgm_idx + 1) & 0xF;
-            return;
-        }
-
-        SD_PRINT("***TooMuchBGMSoundCode(%x)***\n", sound_code);
+        set_sng_code_buf(sound_code);
     }
     else
     {
