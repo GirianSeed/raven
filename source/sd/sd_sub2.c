@@ -488,21 +488,21 @@ void block_end(void)
 
 void fxs_set(void)
 {
+    SD_PRINT("track %u: unimplemented fxs_set %x %x\n", mtrack, mdata2 & 0xFF, mdata3);
+
     sptr->fxt = mdata2;
     sptr->fxs = mdata3;
     sptr->fx_addr = mptr;
-
-    SD_PRINT("track %d, fxs_set %x %x\n", mtrack, mdata2, mdata3);
 }
 
 void fxe_set(void)
 {
+    SD_PRINT("track %u: unimplemented fxe_set\n", mtrack);
+
     /* TODO */
 
     // mptr = sptr->fx_addr;
     // sptr->fxe = 0;
-
-    SD_PRINT("track %d, fxe_set\n", mtrack);
 }
 
 void xon_set(void)
@@ -512,7 +512,7 @@ void xon_set(void)
 
 void at1_set(void)
 {
-    SD_PRINT("track %d, at1_set %x %x %x\n", mtrack, mdata2, mdata3, mdata4);
+    SD_PRINT("track %u: at1_set %x %x %x\n", mtrack, mdata2 & 0xFF, mdata3 & 0xFF, mdata4 & 0xFF);
 
     if (sptr->atp != auto_env_pos && sptr->atp != auto_phase_fg)
     {
@@ -564,7 +564,7 @@ void at1_set(void)
 
 void at2_set(void)
 {
-    SD_PRINT("track %d, at2_set %x %x\n", mtrack, mdata2, mdata3);
+    SD_PRINT("track %u: at2_set %x %x\n", mtrack, mdata2 & 0xFF, mdata3 & 0xFF);
 
     if (sptr->atm == 1)
     {
@@ -604,7 +604,7 @@ void at2_set(void)
 
 void at3_set(void)
 {
-    SD_PRINT("track %d, at3_set %x %x\n", mtrack, mdata2, mdata3);
+    SD_PRINT("track %u: at3_set %x %x\n", mtrack, mdata2 & 0xFF, mdata3 & 0xFF);
 
     if (sptr->atm != 0)
     {
@@ -640,7 +640,7 @@ void at3_set(void)
 
 void at4_set(void)
 {
-    SD_PRINT("track %d, at4_set %x %x\n", mtrack, mdata2, mdata3);
+    SD_PRINT("track %u: at4_set %x %x\n", mtrack, mdata2 & 0xFF, mdata3 & 0xFF);
 
     if (sptr->atm != 0)
     {
@@ -672,7 +672,7 @@ void at4_set(void)
 
 void at5_set(void)
 {
-    SD_PRINT("track %d, at5_set %x %x\n", mtrack, mdata2, mdata3);
+    SD_PRINT("track %u: at5_set %x %x\n", mtrack, mdata2 & 0xFF, mdata3 & 0xFF);
 
     if (sptr->atm == 1)
     {
@@ -700,7 +700,7 @@ void at5_set(void)
 
 void at6_set(void)
 {
-    SD_PRINT("track %d, at6_set %x %x\n", mtrack, mdata2, mdata3);
+    SD_PRINT("track %u: at6_set %x %x\n", mtrack, mdata2 & 0xFF, mdata3 & 0xFF);
 
     if (sptr->atm == 1)
     {
@@ -724,7 +724,7 @@ void at6_set(void)
 
 void at7_set(void)
 {
-    SD_PRINT("track %d, at7_set %x %x\n", mtrack, mdata2, mdata3);
+    SD_PRINT("track %u: at7_set %x %x\n", mtrack, mdata2 & 0xFF, mdata3 & 0xFF);
 
     if (sptr->atm == 1)
     {
@@ -744,7 +744,7 @@ void at7_set(void)
 
 void at8_set(void)
 {
-    SD_PRINT("track %d, at8_set %x %x\n", mtrack, mdata2, mdata3);
+    SD_PRINT("track %u: at8_set %x %x\n", mtrack, mdata2 & 0xFF, mdata3 & 0xFF);
 
     sptr->atv[7] = mdata2;
     sptr->ats[7] = mdata3;

@@ -115,7 +115,6 @@ int main(int argc, char **argv)
     if (phase != 0)
     {
         sd_set_cli(0xFF000100 + phase, SD_ASYNC); // phase n
-
     }
 
     do

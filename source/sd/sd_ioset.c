@@ -325,7 +325,6 @@ void vol_set(unsigned int vol)
     else
     {
         pan = se_pan[mtrack - SD_SE_START];
-        vol = (vol * se_vol[mtrack - SD_SE_START]) >> 16;
 
         if (sound_mono_fg != 0)
         {
