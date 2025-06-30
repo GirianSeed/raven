@@ -486,6 +486,270 @@ void block_end(void)
     keyoffs |= keyd;
 }
 
+void fxs_set(void)
+{
+    sptr->fxt = mdata2;
+    sptr->fxs = mdata3;
+    sptr->fx_addr = mptr;
+
+    SD_PRINT("track %d, fxs_set %x %x\n", mtrack, mdata2, mdata3);
+}
+
+void fxe_set(void)
+{
+    /* TODO */
+
+    // mptr = sptr->fx_addr;
+    // sptr->fxe = 0;
+
+    SD_PRINT("track %d, fxe_set\n", mtrack);
+}
+
+void xon_set(void)
+{
+    sptr->fxo = 1;
+}
+
+void at1_set(void)
+{
+    SD_PRINT("track %d, at1_set %x %x %x\n", mtrack, mdata2, mdata3, mdata4);
+
+    if (sptr->atp != auto_env_pos && sptr->atp != auto_phase_fg)
+    {
+        mix_fader[mtrack].target = (mdata2 << 8) + mdata2;
+        mix_fader[mtrack].vol = mix_fader[mtrack].target;
+        mix_fader[mtrack].step = 0;
+    }
+
+    sptr->atv[0] = mdata2;
+    sptr->ats[0] = mdata3;
+
+    sptr->atm = mdata4;
+
+    if (sptr->atm == 1)
+    {
+        sptr->atv[1] = mdata2;
+        sptr->ats[1] = 0;
+        sptr->atv[2] = mdata2;
+        sptr->ats[2] = 0;
+        sptr->atv[3] = mdata2;
+        sptr->ats[3] = 0;
+        sptr->atv[4] = mdata2;
+        sptr->ats[4] = 0;
+        sptr->atv[5] = mdata2;
+        sptr->ats[5] = 0;
+        sptr->atv[6] = mdata2;
+        sptr->ats[6] = 0;
+        sptr->atv[7] = mdata2;
+        sptr->ats[7] = 0;
+    }
+    else
+    {
+        sptr->atv[1] = mdata2;
+        sptr->ats[1] = 0xFF;
+        sptr->atv[2] = mdata2;
+        sptr->ats[2] = 0xFF;
+        sptr->atv[3] = mdata2;
+        sptr->ats[3] = 0xFF;
+        sptr->atv[4] = mdata2;
+        sptr->ats[4] = 0xFF;
+        sptr->atv[5] = mdata2;
+        sptr->ats[5] = 0xFF;
+        sptr->atv[6] = mdata2;
+        sptr->ats[6] = 0xFF;
+        sptr->atv[7] = mdata2;
+        sptr->ats[7] = 0xFF;
+    }
+}
+
+void at2_set(void)
+{
+    SD_PRINT("track %d, at2_set %x %x\n", mtrack, mdata2, mdata3);
+
+    if (sptr->atm == 1)
+    {
+        sptr->atv[1] = mdata2;
+        sptr->ats[1] = mdata3;
+        sptr->atv[2] = mdata2;
+        sptr->ats[2] = 0;
+        sptr->atv[3] = mdata2;
+        sptr->ats[3] = 0;
+        sptr->atv[4] = mdata2;
+        sptr->ats[4] = 0;
+        sptr->atv[5] = mdata2;
+        sptr->ats[5] = 0;
+        sptr->atv[6] = mdata2;
+        sptr->ats[6] = 0;
+        sptr->atv[7] = mdata2;
+        sptr->ats[7] = 0;
+    }
+    else
+    {
+        sptr->atv[1] = mdata2;
+        sptr->ats[1] = mdata3;
+        sptr->atv[2] = mdata2;
+        sptr->ats[2] = 0xFF;
+        sptr->atv[3] = mdata2;
+        sptr->ats[3] = 0xFF;
+        sptr->atv[4] = mdata2;
+        sptr->ats[4] = 0xFF;
+        sptr->atv[5] = mdata2;
+        sptr->ats[5] = 0xFF;
+        sptr->atv[6] = mdata2;
+        sptr->ats[6] = 0xFF;
+        sptr->atv[7] = mdata2;
+        sptr->ats[7] = 0xFF;
+    }
+}
+
+void at3_set(void)
+{
+    SD_PRINT("track %d, at3_set %x %x\n", mtrack, mdata2, mdata3);
+
+    if (sptr->atm != 0)
+    {
+        sptr->atv[2] = mdata2;
+        sptr->ats[2] = mdata3;
+        sptr->atv[3] = mdata2;
+        sptr->ats[3] = 0;
+        sptr->atv[4] = mdata2;
+        sptr->ats[4] = 0;
+        sptr->atv[5] = mdata2;
+        sptr->ats[5] = 0;
+        sptr->atv[6] = mdata2;
+        sptr->ats[6] = 0;
+        sptr->atv[7] = mdata2;
+        sptr->ats[7] = 0;
+    }
+    else
+    {
+        sptr->atv[2] = mdata2;
+        sptr->ats[2] = mdata3;
+        sptr->atv[3] = mdata2;
+        sptr->ats[3] = 0xFF;
+        sptr->atv[4] = mdata2;
+        sptr->ats[4] = 0xFF;
+        sptr->atv[5] = mdata2;
+        sptr->ats[5] = 0xFF;
+        sptr->atv[6] = mdata2;
+        sptr->ats[6] = 0xFF;
+        sptr->atv[7] = mdata2;
+        sptr->ats[7] = 0xFF;
+    }
+}
+
+void at4_set(void)
+{
+    SD_PRINT("track %d, at4_set %x %x\n", mtrack, mdata2, mdata3);
+
+    if (sptr->atm != 0)
+    {
+        sptr->atv[3] = mdata2;
+        sptr->ats[3] = mdata3;
+        sptr->atv[4] = mdata2;
+        sptr->ats[4] = 0;
+        sptr->atv[5] = mdata2;
+        sptr->ats[5] = 0;
+        sptr->atv[6] = mdata2;
+        sptr->ats[6] = 0;
+        sptr->atv[7] = mdata2;
+        sptr->ats[7] = 0;
+    }
+    else
+    {
+        sptr->atv[3] = mdata2;
+        sptr->ats[3] = mdata3;
+        sptr->atv[4] = mdata2;
+        sptr->ats[4] = 0xFF;
+        sptr->atv[5] = mdata2;
+        sptr->ats[5] = 0xFF;
+        sptr->atv[6] = mdata2;
+        sptr->ats[6] = 0xFF;
+        sptr->atv[7] = mdata2;
+        sptr->ats[7] = 0xFF;
+    }
+}
+
+void at5_set(void)
+{
+    SD_PRINT("track %d, at5_set %x %x\n", mtrack, mdata2, mdata3);
+
+    if (sptr->atm == 1)
+    {
+        sptr->atv[4] = mdata2;
+        sptr->ats[4] = mdata3;
+        sptr->atv[5] = mdata2;
+        sptr->ats[5] = 0;
+        sptr->atv[6] = mdata2;
+        sptr->ats[6] = 0;
+        sptr->atv[7] = mdata2;
+        sptr->ats[7] = 0;
+    }
+    else
+    {
+        sptr->atv[4] = mdata2;
+        sptr->ats[4] = mdata3;
+        sptr->atv[5] = mdata2;
+        sptr->ats[5] = 0xFF;
+        sptr->atv[6] = mdata2;
+        sptr->ats[6] = 0xFF;
+        sptr->atv[7] = mdata2;
+        sptr->ats[7] = 0xFF;
+    }
+}
+
+void at6_set(void)
+{
+    SD_PRINT("track %d, at6_set %x %x\n", mtrack, mdata2, mdata3);
+
+    if (sptr->atm == 1)
+    {
+        sptr->atv[5] = mdata2;
+        sptr->ats[5] = mdata3;
+        sptr->atv[6] = mdata2;
+        sptr->ats[6] = 0;
+        sptr->atv[7] = mdata2;
+        sptr->ats[7] = 0;
+    }
+    else
+    {
+        sptr->atv[5] = mdata2;
+        sptr->ats[5] = mdata3;
+        sptr->atv[6] = mdata2;
+        sptr->ats[6] = 0xFF;
+        sptr->atv[7] = mdata2;
+        sptr->ats[7] = 0xFF;
+    }
+}
+
+void at7_set(void)
+{
+    SD_PRINT("track %d, at7_set %x %x\n", mtrack, mdata2, mdata3);
+
+    if (sptr->atm == 1)
+    {
+        sptr->atv[6] = mdata2;
+        sptr->ats[6] = mdata3;
+        sptr->atv[7] = mdata2;
+        sptr->ats[7] = 0;
+    }
+    else
+    {
+        sptr->atv[6] = mdata2;
+        sptr->ats[6] = mdata3;
+        sptr->atv[7] = mdata2;
+        sptr->ats[7] = 0xFF;
+    }
+}
+
+void at8_set(void)
+{
+    SD_PRINT("track %d, at8_set %x %x\n", mtrack, mdata2, mdata3);
+
+    sptr->atv[7] = mdata2;
+    sptr->ats[7] = mdata3;
+}
+
 void no_cmd(void)
 {
     SD_PRINT("track %d, unknown command %x\n", mtrack, mdata1);

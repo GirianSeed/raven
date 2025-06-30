@@ -298,17 +298,7 @@ void vol_set(unsigned int vol)
 
     if (sptr->panmod == 2 && mtrack < SD_BGM_VOICES)
     {
-        // pan = mix_fader[mtrack].field_C;
-
-        // fix
-        pan = sptr->pand >> 8;
-
-        // pan = sptr->pand >> 8;
-
-        // if (pan > 40)
-        // {
-        //     pan = 40;
-        // }
+        pan = mix_fader[mtrack].pan;
 
         if (sound_mono_fg != 0)
         {

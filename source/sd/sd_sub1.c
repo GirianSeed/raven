@@ -84,9 +84,9 @@ static void (*cntl_tbl[128])(void) = {
     /* 0x4a */ no_cmd,
     /* 0x4b */ no_cmd,
     /* 0x4c */ no_cmd,
-    /* 0x4d */ no_cmd,
-    /* 0x4e */ no_cmd,
-    /* 0x4f */ no_cmd,
+    /* 0x4d */ at6_set,
+    /* 0x4e */ at7_set,
+    /* 0x4f */ at8_set,
     /* 0x50 */ tempo_set,
     /* 0x51 */ tempo_move,
     /* 0x52 */ sno_set,
@@ -97,8 +97,8 @@ static void (*cntl_tbl[128])(void) = {
     /* 0x57 */ ads_set,
     /* 0x58 */ srs_set,
     /* 0x59 */ rrs_set,
-    /* 0x5a */ no_cmd,
-    /* 0x5b */ no_cmd,
+    /* 0x5a */ fxs_set,
+    /* 0x5b */ fxe_set,
     /* 0x5c */ ofs_set,
     /* 0x5d */ pan_set,
     /* 0x5e */ pan_move,
@@ -118,7 +118,7 @@ static void (*cntl_tbl[128])(void) = {
     /* 0x6c */ l3e_set,
     /* 0x6d */ kakko_start,
     /* 0x6e */ kakko_end,
-    /* 0x6f */ no_cmd,
+    /* 0x6f */ xon_set,
     /* 0x70 */ no_cmd,
     /* 0x71 */ env_set,
     /* 0x72 */ rest_set,
@@ -127,11 +127,11 @@ static void (*cntl_tbl[128])(void) = {
     /* 0x75 */ echo_set2,
     /* 0x76 */ eon_set,
     /* 0x77 */ eof_set,
-    /* 0x78 */ no_cmd,
-    /* 0x79 */ no_cmd,
-    /* 0x7a */ no_cmd,
-    /* 0x7b */ no_cmd,
-    /* 0x7c */ no_cmd,
+    /* 0x78 */ at1_set,
+    /* 0x79 */ at2_set,
+    /* 0x7a */ at3_set,
+    /* 0x7b */ at4_set,
+    /* 0x7c */ at5_set,
     /* 0x7d */ no_cmd,
     /* 0x7e */ no_cmd,
     /* 0x7f */ block_end
@@ -189,14 +189,14 @@ int sound_sub(void)
         bendch();
         vol_compute();
 
-        // fader_automation1();
+        fader_automation1();
     }
     else
     {
         note_cntl();
     }
 
-    // fader_automation2();
+    fader_automation2();
 
     if (key_fg && sptr->snos < 0x100)
     {
@@ -834,4 +834,162 @@ void volxset(unsigned char depth)
 
     pvod = (sptr->pvod >> 8) & 0xFF;
     vol_set(((pvod * vol + 0x80) >> 8) & 0xFF);
+}
+
+void fader_automation1(void)
+{
+    int target;
+    int step;
+
+    if (sptr->atm != 1 || auto_phase_fg == sptr->atp)
+    {
+        return;
+    }
+
+    sptr->atp = auto_phase_fg;
+
+    switch (auto_phase_fg)
+    {
+    case 0:
+        break;
+    case 1: /* fallthrough */
+    case 2: /* fallthrough */
+    case 3: /* fallthrough */
+    case 4: /* fallthrough */
+    case 5: /* fallthrough */
+    case 6: /* fallthrough */
+    case 7: /* fallthrough */
+    case 8:
+        target = (sptr->atv[auto_phase_fg - 1] << 8) + sptr->atv[auto_phase_fg - 1];
+        step = sptr->ats[auto_phase_fg - 1];
+        break;
+    default:
+        auto_phase_fg = 0;
+        break;
+    }
+
+    if (auto_phase_fg == 0)
+    {
+        return;
+    }
+
+    mix_fader[mtrack].target = target;
+
+    if (mix_fader[mtrack].target == mix_fader[mtrack].vol)
+    {
+        mix_fader[mtrack].step = 0;
+        return;
+    }
+
+    if (step)
+    {
+        mix_fader[mtrack].step = (mix_fader[mtrack].target - mix_fader[mtrack].vol) / (step * 10);
+        if (mix_fader[mtrack].step == 0)
+        {
+            mix_fader[mtrack].step = 1;
+        }
+    }
+    else
+    {
+        mix_fader[mtrack].vol = mix_fader[mtrack].target;
+        mix_fader[mtrack].step = 0;
+    }
+}
+
+void fader_automation2(void)
+{
+    int target;
+
+    if (sptr->atm != 2 && sptr->atm != 3)
+    {
+        return;
+    }
+
+    if (sptr->atm == 2 && sptr->atp == auto_env_pos)
+    {
+        return;
+    }
+
+    if (sptr->atm == 3 && sptr->atp == auto_env_pos2)
+    {
+        return;
+    }
+
+    switch(sptr->atm)
+    {
+    case 2:
+        sptr->atp = auto_env_pos;
+        break;
+    case 3:
+        sptr->atp = auto_env_pos2;
+        break;
+    default:
+        break;
+    }
+
+    if (sptr->atp <= sptr->ats[0])
+    {
+        target = (sptr->atv[0] << 8) + sptr->atv[0];
+    }
+    else if(sptr->atp <= sptr->ats[1])
+    {
+        target = (sptr->atp - sptr->ats[0]) * (sptr->atv[1] - sptr->atv[0]);
+        target = ((target << 8) + target) / (sptr->ats[1] - sptr->ats[0]);
+        target += (sptr->atv[0] << 8) + sptr->atv[0];
+    }
+    else if (sptr->atp <= sptr->ats[2])
+    {
+        target = (sptr->atp - sptr->ats[1]) * (sptr->atv[2] - sptr->atv[1]);
+        target = ((target << 8) + target) / (sptr->ats[2] - sptr->ats[1]);
+        target += (sptr->atv[1] << 8) + sptr->atv[1];
+    }
+    else if (sptr->atp <= sptr->ats[3])
+    {
+        target = (sptr->atp - sptr->ats[2]) * (sptr->atv[3] - sptr->atv[2]);
+        target = ((target << 8) + target) / (sptr->ats[3] - sptr->ats[2]);
+        target += (sptr->atv[2] << 8) + sptr->atv[2];
+    }
+    else if (sptr->atp <= sptr->ats[4])
+    {
+        target = (sptr->atp - sptr->ats[3]) * (sptr->atv[4] - sptr->atv[3]);
+        target = ((target << 8) + target) / (sptr->ats[4] - sptr->ats[3]);
+        target += (sptr->atv[3] << 8) + sptr->atv[3];
+    }
+    else if (sptr->atp <= sptr->ats[5])
+    {
+        target = (sptr->atp - sptr->ats[4]) * (sptr->atv[5] - sptr->atv[4]);
+        target = ((target << 8) + target) / (sptr->ats[5] - sptr->ats[4]);
+        target += (sptr->atv[4] << 8) + sptr->atv[4];
+    }
+    else if (sptr->atp <= sptr->ats[6])
+    {
+        target = (sptr->atp - sptr->ats[5]) * (sptr->atv[6] - sptr->atv[5]);
+        target = ((target << 8) + target) / (sptr->ats[6] - sptr->ats[5]);
+        target += (sptr->atv[5] << 8) + sptr->atv[5];
+    }
+    else if (sptr->atp <= sptr->ats[7])
+    {
+        target = (sptr->atp - sptr->ats[6]) * (sptr->atv[7] - sptr->atv[6]);
+        target = ((target << 8) + target) / (sptr->ats[7] - sptr->ats[6]);
+        target += (sptr->atv[6] << 8) + sptr->atv[6];
+    }
+    else
+    {
+        target = (sptr->atv[7] << 8) + sptr->atv[7];
+    }
+
+    mix_fader[mtrack].target = target;
+
+    if (mix_fader[mtrack].target == mix_fader[mtrack].vol)
+    {
+        mix_fader[mtrack].step = 0;
+    }
+    else
+    {
+        mix_fader[mtrack].step = (mix_fader[mtrack].target - mix_fader[mtrack].vol) / 10;
+        if (mix_fader[mtrack].step == 0)
+        {
+            mix_fader[mtrack].step = 1;
+        }
+    }
 }

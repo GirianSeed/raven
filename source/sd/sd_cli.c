@@ -197,6 +197,16 @@ static void sd_set(unsigned int sound_code)
         case 0xFF0000FF:
             skip_intro_loop = 1;
             return;
+        case 0xFF000101: /* fallthrough */
+        case 0xFF000102: /* fallthrough */
+        case 0xFF000103: /* fallthrough */
+        case 0xFF000104: /* fallthrough */
+        case 0xFF000105: /* fallthrough */
+        case 0xFF000106: /* fallthrough */
+        case 0xFF000107: /* fallthrough */
+        case 0xFF000108:
+            set_sng_code_buf(sound_code);
+            return;
         }
 
         SD_PRINT("sd_set:unknown code (code=%x)\n", sound_code);

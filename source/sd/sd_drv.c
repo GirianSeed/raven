@@ -3,7 +3,6 @@
 
 #include <stdio.h>
 
-static int dword_800BEFF8;
 static int sng_syukan_vol;
 static int sng_fadein_time;
 static int dword_800BF154;
@@ -52,6 +51,10 @@ SOUND_W       *sptr;
 SPU_TRACK_REG  spu_tr_wk[SD_N_VOICES];
 int            sng_master_vol[SD_BGM_VOICES];
 unsigned int   skip_intro_loop;
+FADER          mix_fader[SD_BGM_VOICES];
+unsigned int   auto_phase_fg;
+unsigned char  auto_env_pos;
+unsigned char  auto_env_pos2;
 
 void IntSdMain(void)
 {
@@ -154,6 +157,17 @@ void IntSdMain(void)
         SD_PRINT("SongStop\n");
         break;
 
+    case 0xFF000101: /* fallthrough */
+    case 0xFF000102: /* fallthrough */
+    case 0xFF000103: /* fallthrough */
+    case 0xFF000104: /* fallthrough */
+    case 0xFF000105: /* fallthrough */
+    case 0xFF000106: /* fallthrough */
+    case 0xFF000107: /* fallthrough */
+    case 0xFF000108:
+        auto_phase_fg = code & 0xf;
+        break;
+
     case 0x01000001: /* fallthrough */
     case 0x01000002: /* fallthrough */
     case 0x01000003: /* fallthrough */
@@ -199,6 +213,9 @@ void IntSdMain(void)
         sng_off();
         sng_pause_fg = 0;
         sng_kaihi_fg = 0;
+        auto_phase_fg = 0;
+        auto_env_pos2 = 0;
+        auto_env_pos = 0;
         skip_intro_loop = 0;
         break;
 
@@ -217,20 +234,18 @@ void IntSdMain(void)
 
             sng_adrs_set(sng_play_code);
             SngFadeWkSet();
+
+            for(int i = 0; i < 32; i++)
+            {
+                mix_fader[i].step = 0;
+                mix_fader[i].vol = 0xFFFF;
+                mix_fader[i].target = 0xFFFF;
+            }
+
             sng_status = 3;
-            dword_800BEFF8 = 0;
             break;
 
         case 3:
-            if ((dword_800BEFF8 != 0) && ((dword_800BEFF8 & SD_BGM_MASK) != (song_end & SD_BGM_MASK)))
-            {
-                SD_PRINT("*** SOUND WORK IS BROKEN !!! ***\n");
-                SD_PRINT("*** SOUND WORK IS BROKEN !!! ***\n");
-                SD_PRINT("*** song_end:%x -> %x        ***\n", song_end & SD_BGM_MASK, dword_800BEFF8 & SD_BGM_MASK);
-                SD_PRINT("*** SOUND WORK IS BROKEN !!! ***\n");
-                SD_PRINT("*** SOUND WORK IS BROKEN !!! ***\n");
-            }
-
             SngFadeInt();
             SngTempoInt();
 
@@ -264,8 +279,6 @@ void IntSdMain(void)
                     }
                 }
             }
-
-            dword_800BEFF8 = song_end;
 
             if ((song_loop_end & SD_BGM_MASK) == SD_BGM_MASK)
             {
@@ -412,20 +425,18 @@ int SngFadeOutS(unsigned int code)
 
 int SngKaihiP(void)
 {
-    /* TODO */
-
     if (sng_kaihi_fg)
     {
         for (int i = 0; i < 16; i++)
         {
-            // mix_fader[i].field_8 = 0xffff;
-            // mix_fader[i].field_0 = (mix_fader[i].field_8 - mix_fader[i].field_4) / 100;
+            mix_fader[i].target = 0xffff;
+            mix_fader[i].step = (mix_fader[i].target - mix_fader[i].vol) / 100;
         }
 
         for (int i = 16; i < 32; i++)
         {
-            // mix_fader[i].field_8 = 0;
-            // mix_fader[i].field_0 = (mix_fader[i].field_8 - mix_fader[i].field_4) / 400;
+            mix_fader[i].target = 0;
+            mix_fader[i].step = (mix_fader[i].target - mix_fader[i].vol) / 400;
         }
 
         sng_kaihi_fg = 0;
@@ -434,14 +445,14 @@ int SngKaihiP(void)
     {
         for (int i = 0; i < 16; i++)
         {
-            // mix_fader[i].field_8 = 0;
-            // mix_fader[i].field_0 = (mix_fader[i].field_8 - mix_fader[i].field_4) / 1200;
+            mix_fader[i].target = 0;
+            mix_fader[i].step = (mix_fader[i].target - mix_fader[i].vol) / 1200;
         }
 
         for (int i = 16; i < 32; i++)
         {
-            // mix_fader[i].field_8 = 0xffff;
-            // mix_fader[i].field_0 = (mix_fader[i].field_8 - mix_fader[i].field_4) / 1000;
+            mix_fader[i].target = 0xffff;
+            mix_fader[i].step = (mix_fader[i].target - mix_fader[i].vol) / 1000;
         }
 
         sng_kaihi_fg = 1;
@@ -638,28 +649,26 @@ void SngFadeInt(void)
             vol -= fade;
         }
 
-        /* TODO */
-        // if (mix_fader[i].field_4 != mix_fader[i].field_8)
-        // {
-        //     mix_fader[i].field_4 += mix_fader[i].field_0;
-        //
-        //     if (mix_fader[i].field_0 < 0)
-        //     {
-        //         if (mix_fader[i].field_4 < mix_fader[i].field_8)
-        //         {
-        //             mix_fader[i].field_4 = mix_fader[i].field_8;
-        //             mix_fader[i].field_0 = 0;
-        //         }
-        //     }
-        //     else if (mix_fader[i].field_4 > mix_fader[i].field_8)
-        //     {
-        //         mix_fader[i].field_4 = mix_fader[i].field_8;
-        //         mix_fader[i].field_0 = 0;
-        //     }
-        // }
-        // sng_master_vol[i] = (vol * mix_fader[i].field_4) / 0xffff;
+        if (mix_fader[i].vol != mix_fader[i].target)
+        {
+            mix_fader[i].vol += mix_fader[i].step;
 
-        sng_master_vol[i] = vol;
+            if (mix_fader[i].step < 0)
+            {
+                if (mix_fader[i].vol < mix_fader[i].target)
+                {
+                    mix_fader[i].vol = mix_fader[i].target;
+                    mix_fader[i].step = 0;
+                }
+            }
+            else if (mix_fader[i].vol > mix_fader[i].target)
+            {
+                mix_fader[i].vol = mix_fader[i].target;
+                mix_fader[i].step = 0;
+            }
+        }
+
+        sng_master_vol[i] = (unsigned int)(vol * mix_fader[i].vol) / 0xffff;
     }
 }
 
@@ -773,4 +782,26 @@ void sng_track_init(SOUND_W *track)
     track->tund     = 0;
     track->tmp      = 255;
     track->tmpc     = 0;
+    track->fxs      = 0;
+    track->fxc      = 1;
+    track->fxe      = 0;
+    track->fxo      = 0;
+    track->atp      = 0xFFFFFFFF;
+    track->atm      = 0;
+    track->atv[0]   = 0;
+    track->atv[1]   = 0;
+    track->atv[2]   = 0;
+    track->atv[3]   = 0;
+    track->atv[4]   = 0;
+    track->atv[5]   = 0;
+    track->atv[6]   = 0;
+    track->atv[7]   = 0;
+    track->ats[0]   = 0;
+    track->ats[1]   = 0;
+    track->ats[2]   = 0;
+    track->ats[3]   = 0;
+    track->ats[4]   = 0;
+    track->ats[5]   = 0;
+    track->ats[6]   = 0;
+    track->ats[7]   = 0;
 }

@@ -55,6 +55,22 @@ void sd_init(int debug, int loops, int reverb)
         se_playing[i].code = 0;
     }
 
+    for(int i = 0; i < 16; i++)
+    {
+        mix_fader[i].step = 0;
+        mix_fader[i].vol = 0xFFFF;
+        mix_fader[i].target = 0xFFFF;
+        mix_fader[i].pan = 32;
+    }
+
+    for(int i = 16; i < 32; i++)
+    {
+        mix_fader[i].step = 0;
+        mix_fader[i].vol = 0;
+        mix_fader[i].target = 0;
+        mix_fader[i].pan = 32;
+    }
+
     se_exp_table = (SETBL2 *)se_header;
     se_data  = (unsigned char *)(se_exp_table + 128);
 }

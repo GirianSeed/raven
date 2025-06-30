@@ -193,6 +193,28 @@ typedef struct SOUND_W
 
     /* reset release decay */
     unsigned short rrd;
+
+    /* effect */
+    unsigned int   fxs;
+    unsigned char  fxt;
+    unsigned char  fxc;
+    unsigned char *fx_addr;
+    unsigned char  fxe;
+    unsigned char  fxo;
+
+    /* automation */
+    unsigned int   atp;
+    unsigned char  atm;
+    unsigned char  atv[8];
+    unsigned char  ats[8];
 } SOUND_W;
+
+typedef struct FADER
+{
+    int step;
+    int vol;
+    int target;
+    int pan;
+} FADER;
 
 #endif // _SD_INCL_H_

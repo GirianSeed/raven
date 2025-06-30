@@ -64,6 +64,8 @@ void note_cntl(void);
 unsigned int random_gen(void);
 void tempo_ch(void);
 void volxset(unsigned char depth);
+void fader_automation1(void);
+void fader_automation2(void);
 
 /* sd_sub2.c */
 void rest_set(void);
@@ -107,6 +109,17 @@ void rrs_set(void);
 void pm_set(void);
 void jump_set(void);
 void block_end(void);
+void fxs_set(void);
+void fxe_set(void);
+void xon_set(void);
+void at1_set(void);
+void at2_set(void);
+void at3_set(void);
+void at4_set(void);
+void at5_set(void);
+void at6_set(void);
+void at7_set(void);
+void at8_set(void);
 void no_cmd(void);
 
 /* sd_ioset.c */
@@ -173,5 +186,9 @@ extern  SOUND_W       *sptr;
 extern  SPU_TRACK_REG  spu_tr_wk[SD_N_VOICES];
 extern  int            sng_master_vol[SD_BGM_VOICES];
 extern  unsigned int   skip_intro_loop;
+extern  FADER          mix_fader[SD_BGM_VOICES];
+extern  unsigned int   auto_phase_fg;
+extern  unsigned char  auto_env_pos;
+extern  unsigned char  auto_env_pos2;
 
 #endif // _SD_EXT_H_
