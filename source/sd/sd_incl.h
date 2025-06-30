@@ -109,11 +109,12 @@ typedef struct SOUND_W
     unsigned char *lp2_addr;
     unsigned char *lp3_addr;
 
-    /* kakko (?) */
+    /* kakko (bracket loop) */
     unsigned char  kakfg;
     unsigned char *kak1ptr;
     unsigned char *kak2ptr;
 
+    /* crescendo (portamento volume) */
     unsigned char  pvoc;
     int            pvod;
     int            pvoad;
@@ -131,6 +132,7 @@ typedef struct SOUND_W
     char           panoff;
     char           panmod;
 
+    /* pitch */
     unsigned char  swpc;
     unsigned char  swphc;
     unsigned int   swpd;
@@ -167,7 +169,10 @@ typedef struct SOUND_W
     unsigned char  trecad;
     unsigned char  trehs;
 
+    /* note value */
     unsigned int   snos;
+
+    /* pitch transposition */
     int            ptps;
 
     /* decline volume */
