@@ -3,10 +3,9 @@
 
 #include <stdio.h>
 
-static int dword_800BEFF8;
-static int dword_800BF008;
+static int sng_syukan_vol;
 static int sng_fadein_time;
-static int dword_800BF154;
+static int vox_on_vol;
 static int sng_fout_fg;
 static int sd_code_read;
 static int sng_kaihi_fg;
@@ -218,19 +217,9 @@ void IntSdMain(void)
             sng_adrs_set(sng_play_code);
             SngFadeWkSet();
             sng_status = 3;
-            dword_800BEFF8 = 0;
             break;
 
         case 3:
-            if ((dword_800BEFF8 != 0) && ((dword_800BEFF8 & SD_BGM_MASK) != (song_end & SD_BGM_MASK)))
-            {
-                SD_PRINT("*** SOUND WORK IS BROKEN !!! ***\n");
-                SD_PRINT("*** SOUND WORK IS BROKEN !!! ***\n");
-                SD_PRINT("*** song_end:%x -> %x        ***\n", song_end & SD_BGM_MASK, dword_800BEFF8 & SD_BGM_MASK);
-                SD_PRINT("*** SOUND WORK IS BROKEN !!! ***\n");
-                SD_PRINT("*** SOUND WORK IS BROKEN !!! ***\n");
-            }
-
             SngFadeInt();
             SngTempoInt();
 
@@ -264,8 +253,6 @@ void IntSdMain(void)
                     }
                 }
             }
-
-            dword_800BEFF8 = song_end;
 
             if ((song_loop_end & SD_BGM_MASK) == SD_BGM_MASK)
             {
@@ -568,13 +555,13 @@ void SngFadeInt(void)
     }
     else
     {
-        if (dword_800BF154 != 0)
+        if (vox_on_vol != 0)
         {
-            dword_800BF154 -= 245;
+            vox_on_vol -= 245;
 
-            if (dword_800BF154 < 0)
+            if (vox_on_vol < 0)
             {
-                dword_800BF154 = 0;
+                vox_on_vol = 0;
             }
         }
 
@@ -603,36 +590,36 @@ void SngFadeInt(void)
 
     if (sng_syukan_fg != 0)
     {
-        if (dword_800BF008 < 0x5000)
+        if (sng_syukan_vol < 0x5000)
         {
-            dword_800BF008 += 204;
+            sng_syukan_vol += 204;
 
-            if (dword_800BF008 > 0x5000)
+            if (sng_syukan_vol > 0x5000)
             {
-                dword_800BF008 = 0x5000;
+                sng_syukan_vol = 0x5000;
             }
         }
     }
     else
     {
-        if (dword_800BF008 != 0)
+        if (sng_syukan_vol != 0)
         {
-            dword_800BF008 -= 204;
+            sng_syukan_vol -= 204;
 
-            if (dword_800BF008 < 0)
+            if (sng_syukan_vol < 0)
             {
-                dword_800BF008 = 0;
+                sng_syukan_vol = 0;
             }
         }
     }
 
-    if (dword_800BF154 <= dword_800BF008)
+    if (vox_on_vol <= sng_syukan_vol)
     {
-        mod = dword_800BF008;
+        mod = sng_syukan_vol;
     }
     else
     {
-        mod = dword_800BF154;
+        mod = vox_on_vol;
     }
 
     for (int i = 0; i < SD_BGM_VOICES; i++)
