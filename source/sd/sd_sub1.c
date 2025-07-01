@@ -241,11 +241,6 @@ int tx_read(void)
 
         if (mdata1 >= 128)
         {
-            if (mtrack == 0)
-            {
-                SD_PRINT("%lx: cmd = %x\n", mptr - sng_data, mdata1 - 128);
-            }
-
             cntl_tbl[mdata1 - 128]();
             if (mdata1 == 0xF2 || mdata1 == 0xF3 || mdata1 == 0xFF)
             {
