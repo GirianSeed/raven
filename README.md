@@ -4,8 +4,12 @@ This is a port of the sound library written by Kazuki Muraoka for Metal Gear Sol
 This library was later expanded for Metal Gear Solid 2 as well as the Zone of the Enders series.
 
 The library includes a PlayStation SPU emulator for audio synthesis.<br>
-This is adapted from [rpsx](https://github.com/KieronJ/rpsx)'s SPU implementation, with nocash's [psx-spx](https://psx-spx.consoledev.net/) hardware documentation and<br>
-[DuckStation](https://github.com/stenzek/duckstation)'s SPU implementation being referenced to fix bugs present in rpsx's implementation.
+This is adapted from [rpsx](https://github.com/KieronJ/rpsx)'s SPU implementation.<br>
+
+The following sources were referenced to improve rpsx's implementation and fix bugs:
+- nocash's [psx-spx](https://psx-spx.consoledev.net) hardware documentation.
+- [DuckStation](https://github.com/stenzek/duckstation)'s SPU implementation.
+- [Mednafen](https://mednafen.github.io)'s SPU FIR resampling implementation.
 
 This project is still very much a work-in-progress. Expect some songs to sound slightly (or very) incorrect.<br>
 In addition the reverb algorithm isn't anywhere near perfect, and lacks proper low-pass filtering at 11.025 kHz.
