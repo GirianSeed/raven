@@ -2,8 +2,6 @@
 #include "sd/sd_ext.h"
 #include "sd/sd_incl.h"
 
-static int sd_code_set;
-
 int sd_sng_play(void)
 {
     return sng_status > 2;

@@ -1,58 +1,6 @@
 #include "sd/sd_ext.h"
 #include "sd/sd_incl.h"
 
-static int sng_syukan_vol;
-static int sng_fadein_time;
-static int vox_on_vol;
-static int sng_fout_fg;
-static int sd_code_read;
-static int sng_kaihi_fg;
-static int sng_pause_fg;
-static SOUND_W sound_w[SD_N_VOICES];
-static int sng_fadein_fg;
-static int sng_fade_time[SD_BGM_VOICES];
-static int sng_syukan_fg;
-static int sng_fout_term;
-static int sng_fade_value[SD_BGM_VOICES];
-
-int            se_tracks;
-int            sd_sng_code_buf[16];
-int            eons;
-SEPLAYTBL      se_playing[SD_SE_VOICES];
-unsigned int   mdata1;
-unsigned int   mdata2;
-unsigned int   mdata3;
-unsigned int   mdata4;
-SEPLAYTBL      se_request[SD_SE_VOICES];
-int            sng_status;
-int            stop_jouchuu_se;
-int            se_pan[SD_SE_VOICES];
-unsigned int   mtrack;
-int            se_vol[SD_SE_VOICES];
-int            eoffs;
-unsigned int   keyons;
-unsigned char *se_data;
-SETBL2        *se_exp_table;
-unsigned int   keyoffs;
-unsigned char  sng_data[0x20000];
-unsigned int   song_end;
-unsigned int   song_loop_end;
-unsigned int   sng_play_code;
-int            sound_mono_fg;
-unsigned int   keyd;
-unsigned char  se_header[0x2800];
-WAVE_W         voice_tbl[512];
-unsigned char *mptr;
-int            se_rev_on;
-SOUND_W       *sptr;
-SPU_TRACK_REG  spu_tr_wk[SD_N_VOICES];
-int            sng_master_vol[SD_BGM_VOICES];
-unsigned int   skip_intro_loop;
-FADER          mix_fader[SD_BGM_VOICES];
-unsigned int   auto_phase_fg;
-unsigned char  auto_env_pos;
-unsigned char  auto_env_pos2;
-
 void IntSdMain(void)
 {
     unsigned int code;

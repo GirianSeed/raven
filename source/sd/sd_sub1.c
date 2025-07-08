@@ -3,8 +3,6 @@
 
 #include <assert.h>
 
-static unsigned int key_fg;
-
 static void (*cntl_tbl[128])(void) = {
     /* 0x00 */ no_cmd,
     /* 0x01 */ no_cmd,
