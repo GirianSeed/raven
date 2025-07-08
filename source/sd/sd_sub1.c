@@ -2,7 +2,6 @@
 #include "sd/sd_incl.h"
 
 #include <assert.h>
-#include <stdio.h>
 
 static unsigned int key_fg;
 

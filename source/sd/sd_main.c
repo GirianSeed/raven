@@ -3,7 +3,6 @@
 
 #include "spu/spu.h"
 
-#include <stdio.h>
 #include <string.h>
 
 int sd_debug_mode;

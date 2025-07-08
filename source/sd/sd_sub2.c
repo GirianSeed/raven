@@ -1,6 +1,8 @@
 #include "sd/sd_ext.h"
 #include "sd/sd_incl.h"
 
+#include "spu/spu.h"
+
 void rest_set(void)
 {
     sptr->rest_fg = 1;
