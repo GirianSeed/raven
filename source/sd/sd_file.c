@@ -5,8 +5,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <arpa/inet.h>
-
 int sd_sng_data_load(const char *name)
 {
     FILE *fp;
@@ -86,6 +84,18 @@ error:
     return 1;
 }
 
+static inline unsigned int read_uint32(const void *ptr)
+{
+    unsigned int val = 0;
+
+    val |= ((unsigned char *)ptr)[0] << 24;
+    val |= ((unsigned char *)ptr)[1] << 16;
+    val |= ((unsigned char *)ptr)[2] << 8;
+    val |= ((unsigned char *)ptr)[3];
+
+    return val;
+}
+
 int sd_wav_data_load(const char *name)
 {
     FILE *fp;
@@ -108,8 +118,8 @@ int sd_wav_data_load(const char *name)
         goto error;
     }
 
-    header.offset = htonl(header.offset);
-    header.size = htonl(header.size);
+    header.offset = read_uint32(&header.offset);
+    header.size = read_uint32(&header.size);
 
     assert((header.offset % sizeof(header)) == 0);
     assert((header.size % sizeof(header)) == 0);
@@ -130,8 +140,8 @@ int sd_wav_data_load(const char *name)
         goto error;
     }
 
-    header.offset = htonl(header.offset);
-    header.size = htonl(header.size);
+    header.offset = read_uint32(&header.offset);
+    header.size = read_uint32(&header.size);
 
     data = malloc(header.size);
     if (data == NULL)
