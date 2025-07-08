@@ -5,8 +5,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <arpa/inet.h>
-
 static int sd_sng_data_load(FILE *fp, size_t size)
 {
     size_t rb;
@@ -30,6 +28,18 @@ static int sd_sng_data_load(FILE *fp, size_t size)
     return 0;
 }
 
+static inline unsigned int read_uint32(const void *ptr)
+{
+    unsigned int val = 0;
+
+    val |= ((unsigned char *)ptr)[0] << 24;
+    val |= ((unsigned char *)ptr)[1] << 16;
+    val |= ((unsigned char *)ptr)[2] << 8;
+    val |= ((unsigned char *)ptr)[3];
+
+    return val;
+}
+
 static int sd_wav_data_load(FILE *fp, size_t size)
 {
     WAVE_H header;
@@ -49,8 +59,8 @@ static int sd_wav_data_load(FILE *fp, size_t size)
         return 1;
     }
 
-    header.offset = htonl(header.offset);
-    header.size = htonl(header.size);
+    header.offset = read_uint32(&header.offset);
+    header.size = read_uint32(&header.size);
 
     assert((header.offset % sizeof(header)) == 0);
     assert((header.size % sizeof(header)) == 0);
@@ -87,8 +97,8 @@ static int sd_wav_data_load(FILE *fp, size_t size)
         return 1;
     }
 
-    header.offset = htonl(header.offset);
-    header.size = htonl(header.size);
+    header.offset = read_uint32(&header.offset);
+    header.size = read_uint32(&header.size);
 
     data = malloc(header.size);
     if (data == NULL)
