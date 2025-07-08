@@ -2,9 +2,6 @@
 #include "sd/sd_ext.h"
 #include "sd/sd_incl.h"
 
-#include <stdint.h>
-#include <stdio.h>
-
 static int sd_code_set;
 
 int sd_sng_play(void)

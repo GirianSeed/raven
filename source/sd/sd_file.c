@@ -1,6 +1,8 @@
 #include "sd/sd_ext.h"
 #include "sd/sd_incl.h"
 
+#include "spu/spu.h"
+
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>

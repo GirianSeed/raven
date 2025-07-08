@@ -1,8 +1,6 @@
 #include "sd/sd_ext.h"
 #include "sd/sd_incl.h"
 
-#include <stdio.h>
-
 static int sng_syukan_vol;
 static int sng_fadein_time;
 static int vox_on_vol;

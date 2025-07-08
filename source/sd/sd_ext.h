@@ -5,7 +5,7 @@
 
 #include "sd/sd_incl.h"
 
-#include "spu/spu.h"
+#include <stdio.h>
 
 #define SD_BGM_VOICES 32
 #define SD_SE_VOICES  12
