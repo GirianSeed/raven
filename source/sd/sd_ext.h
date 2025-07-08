@@ -138,10 +138,23 @@ int sd_sng_code(void);
 extern SETBL se_tbl[128];
 
 /* in sd_wk.c */
-/* TODO: move globals here*/
-
-/*---------------------------------------------------------------------------*/
 extern  int            sd_debug_mode;
+extern  int            song_loop_count;
+extern  unsigned int   key_fg;
+extern  int            sd_code_set;
+extern  int            sng_syukan_vol;
+extern  int            sng_fadein_time;
+extern  int            vox_on_vol;
+extern  int            sng_fout_fg;
+extern  int            sd_code_read;
+extern  int            sng_kaihi_fg;
+extern  int            sng_pause_fg;
+extern  SOUND_W        sound_w[SD_N_VOICES];
+extern  int            sng_fadein_fg;
+extern  int            sng_fade_time[SD_BGM_VOICES];
+extern  int            sng_syukan_fg;
+extern  int            sng_fout_term;
+extern  int            sng_fade_value[SD_BGM_VOICES];
 extern  int            se_tracks;
 extern  int            sd_sng_code_buf[16];
 extern  int            eons;
@@ -164,7 +177,6 @@ extern  unsigned int   keyoffs;
 extern  unsigned char  sng_data[0x4000];
 extern  unsigned int   song_end;
 extern  unsigned int   song_loop_end;
-extern  int            song_loop_count;
 extern  unsigned int   sng_play_code;
 extern  int            sound_mono_fg;
 extern  unsigned int   keyd;

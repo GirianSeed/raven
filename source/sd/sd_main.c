@@ -5,9 +5,6 @@
 
 #include <string.h>
 
-int sd_debug_mode;
-int song_loop_count;
-
 static void sd_init_reverb(int enable)
 {
     spu_set_reverb_enable(0);
