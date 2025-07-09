@@ -112,6 +112,7 @@ void block_end(void);
 void fxs_set(void);
 void fxe_set(void);
 void xon_set(void);
+void vol_i_move(void);
 void at1_set(void);
 void at2_set(void);
 void at3_set(void);
@@ -120,6 +121,8 @@ void at5_set(void);
 void at6_set(void);
 void at7_set(void);
 void at8_set(void);
+void mno_set(void);
+void flg_set(void);
 void no_cmd(void);
 
 /* sd_ioset.c */

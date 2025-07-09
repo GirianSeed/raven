@@ -116,7 +116,7 @@ static void (*cntl_tbl[128])(void) = {
     /* 0x6d */ kakko_start,
     /* 0x6e */ kakko_end,
     /* 0x6f */ xon_set,
-    /* 0x70 */ no_cmd,
+    /* 0x70 */ vol_i_move,
     /* 0x71 */ env_set,
     /* 0x72 */ rest_set,
     /* 0x73 */ tie_set,
@@ -129,8 +129,8 @@ static void (*cntl_tbl[128])(void) = {
     /* 0x7a */ at3_set,
     /* 0x7b */ at4_set,
     /* 0x7c */ at5_set,
-    /* 0x7d */ no_cmd,
-    /* 0x7e */ no_cmd,
+    /* 0x7d */ mno_set,
+    /* 0x7e */ flg_set,
     /* 0x7f */ block_end
 };
 

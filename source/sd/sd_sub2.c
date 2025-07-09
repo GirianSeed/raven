@@ -510,6 +510,34 @@ void xon_set(void)
     sptr->fxo = 1;
 }
 
+void vol_i_move(void)
+{
+    int pvoad;
+
+    sound_w[mdata2].pvoc = mdata3;
+    sound_w[mdata2].pvom = mdata4;
+
+    pvoad = (sound_w[mdata2].pvom << 8) - sound_w[mdata2].pvod;
+    if (pvoad < 0)
+    {
+        sound_w[mdata2].pvoad = -(-pvoad / sound_w[mdata2].pvoc);
+
+        if (sound_w[mdata2].pvoad < -2032)
+        {
+            sound_w[mdata2].pvoad = -2032;
+        }
+    }
+    else
+    {
+        sound_w[mdata2].pvoad = pvoad / sound_w[mdata2].pvoc;
+
+        if (sound_w[mdata2].pvoad > 2032)
+        {
+            sound_w[mdata2].pvoad = 2032;
+        }
+    }
+}
+
 void at1_set(void)
 {
     SD_PRINT("track %u: at1_set %x %x %x\n", mtrack, mdata2 & 0xFF, mdata3 & 0xFF, mdata4 & 0xFF);
@@ -748,6 +776,18 @@ void at8_set(void)
 
     sptr->atv[7] = mdata2;
     sptr->ats[7] = mdata3;
+}
+
+void mno_set(void)
+{
+    // This command is useless as sfx and vox have been stripped out.
+    SD_PRINT("track %u: unimplemented mno_set\n", mtrack);
+}
+
+void flg_set(void)
+{
+    // This command is useless as sfx and vox have been stripped out.
+    SD_PRINT("track %u: unimplemented flg_set\n", mtrack);
 }
 
 void no_cmd(void)
