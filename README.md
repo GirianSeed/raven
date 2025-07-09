@@ -42,6 +42,6 @@ The following options are supported:
 This branch adds changes to the original library required to play songs used by Metal Gear Solid 2:
 - Expands the number of BGM channels from MGS's 13 to MGS2's count of 32.
 - Adds support for the automated mixing used to transition between alert and evasion music.
-- Increased the sampling rate of the SPU from 44.1 kHz to 48 kHz to match the PlayStation 2.
+- Increased the sampling rate of the SPU from 44.1 kHz to 48 kHz to match the PS2.
 - Changes the timestep from 448 samples per tick to 240 samples per tick to match MGS2's 5 ms timer.
-- Added support for loading the sdx data format used in Metal Gear Solid 2.
+- Added support for loading the sdx data format used in MGS2.
