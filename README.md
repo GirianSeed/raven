@@ -12,7 +12,7 @@ The following sources were referenced to improve rpsx's SPU implementation and f
 - [Mednafen](https://mednafen.github.io)'s half-band reverb resampling implementation.
 
 This project is still very much a work-in-progress. Expect some songs to sound slightly (or very) incorrect.<br>
-In addition the reverb algorithm isn't anywhere near perfect, and lacks proper low-pass filtering at 11.025 kHz.
+In addition, the reverb algorithm isn't bit-accurate as it uses floats to avoid dealing with rounding behaviour.
 
 This project only currently supports writing the output to a wave file.
 
