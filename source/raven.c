@@ -72,6 +72,12 @@ int main(int argc, char **argv)
             continue;
         }
 
+        if (argv[i][0] == '-')
+        {
+            printf("warning: unrecognised option: %s\n", argv[i]);
+            continue;
+        }
+
         if (!sdx[0])
         {
             sdx[0] = argv[i];
@@ -84,7 +90,7 @@ int main(int argc, char **argv)
             continue;
         }
 
-        printf("unknown argument: %s\n", argv[i]);
+        printf("warning: unknown argument: %s\n", argv[i]);
     }
 
     if (!sdx[0])
@@ -130,6 +136,8 @@ int main(int argc, char **argv)
     {
         printf("error: failed to write output wave file!\n");
     }
+
+    printf("wave file written to %s\n", output);
 
     sd_term();
     vector_term(&samples);
