@@ -7,27 +7,27 @@
 
 typedef struct wave_riff_h
 {
-    unsigned int   id;
-    unsigned int   size;
-    unsigned int   format;
+    unsigned int id;
+    unsigned int size;
+    unsigned int format;
 } wave_riff_h;
 
 typedef struct wave_fmt_chunk
 {
-    unsigned int   id;
-    unsigned int   size;
+    unsigned int id;
+    unsigned int size;
     unsigned short format;
     unsigned short channels;
-    unsigned int   sample_rate;
-    unsigned int   byte_rate;
+    unsigned int sample_rate;
+    unsigned int byte_rate;
     unsigned short block_align;
     unsigned short sample_size;
 } wave_fmt_chunk;
 
 typedef struct wave_data_chunk
 {
-    unsigned int   id;
-    unsigned int   size;
+    unsigned int id;
+    unsigned int size;
 } wave_data_chunk;
 
 int write_wave_file(const char *name, const char *data, size_t size)
