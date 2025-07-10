@@ -1,4 +1,3 @@
-#include "attr.h"
 #include "spu.h"
 
 #include "common.h"
@@ -60,8 +59,33 @@ typedef struct spu_voice
     short adpcm_hist[2];
 } spu_voice;
 
-static short mvoll, mvolr; /* master volume left/right */
-static short rvoll, rvolr; /* reverb volume left/right */
+typedef struct reverb_attr
+{
+    unsigned short apfd1;
+    unsigned short apfd2;
+    unsigned short iir;
+    unsigned short combv1;
+    unsigned short combv2;
+    unsigned short combv3;
+    unsigned short combv4;
+    unsigned short wall;
+    unsigned short apfv1;
+    unsigned short apfv2;
+    unsigned short samem[2];
+    unsigned short combm1[2];
+    unsigned short combm2[2];
+    unsigned short samed[2];
+    unsigned short diffm[2];
+    unsigned short combm3[2];
+    unsigned short combm4[2];
+    unsigned short diffd[2];
+    unsigned short apf1[2];
+    unsigned short apf2[2];
+    unsigned short in[2];
+} reverb_attr;
+
+static short mvol[2]; /* master volume left/right */
+static short rvol[2]; /* reverb volume left/right */
 
 static unsigned int vmixr; /* voice mix reverb */
 
@@ -70,8 +94,7 @@ static unsigned int rsize; /* reverb work area size */
 static reverb_attr rattr;  /* reverb attributes */
 static unsigned int raddr; /* reverb index */
 
-static short last_rev_l;
-static short last_rev_r;
+static short last_rev[2];
 
 static int endx; /* bitmask of ended voices */
 
@@ -162,6 +185,94 @@ static short interp_table[] =
     0x589e, 0x58b5, 0x58cb, 0x58e0, 0x58f4, 0x5907, 0x5919, 0x592a,
     0x593a, 0x5949, 0x5958, 0x5965, 0x5971, 0x597c, 0x5986, 0x598f,
     0x5997, 0x599e, 0x59a4, 0x59a9, 0x59ad, 0x59b0, 0x59b2, 0x59b3,
+};
+
+static unsigned short reverb_mode_attr[SPU_REV_MODE_MAX][32] =
+{
+    /* off */
+    {
+        0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+        0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+        0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+        0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000
+    },
+    /* room */
+    {
+        0x007D, 0x005B, 0x6D80, 0x54B8, 0xBED0, 0x0000, 0x0000, 0xBA80,
+        0x5800, 0x5300, 0x04D6, 0x0333, 0x03F0, 0x0227, 0x0374, 0x01EF,
+        0x0334, 0x01B5, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+        0x0000, 0x0000, 0x01B4, 0x0136, 0x00B8, 0x005C, 0x8000, 0x8000
+    },
+    /* studio a */
+    {
+        0x0033, 0x0025, 0x70F0, 0x4FA8, 0xBCE0, 0x4410, 0xC0F0, 0x9C00,
+        0x5280, 0x4EC0, 0x03E4, 0x031B, 0x03A4, 0x02AF, 0x0372, 0x0266,
+        0x031C, 0x025D, 0x025C, 0x018E, 0x022F, 0x0135, 0x01D2, 0x00B7,
+        0x018F, 0x00B5, 0x00B4, 0x0080, 0x004C, 0x0026, 0x8000, 0x8000
+    },
+    /* studio b */
+    {
+        0x00B1, 0x007F, 0x70F0, 0x4FA8, 0xBCE0, 0x4510, 0xBEF0, 0xB4C0,
+        0x5280, 0x4EC0, 0x0904, 0x076B, 0x0824, 0x065F, 0x07A2, 0x0616,
+        0x076C, 0x05ED, 0x05EC, 0x042E, 0x050F, 0x0305, 0x0462, 0x02B7,
+        0x042F, 0x0265, 0x0264, 0x01B2, 0x0100, 0x0080, 0x8000, 0x8000
+    },
+    /* studio c */
+    {
+        0x00E3, 0x00A9, 0x6F60, 0x4FA8, 0xBCE0, 0x4510, 0xBEF0, 0xA680,
+        0x5680, 0x52C0, 0x0DFB, 0x0B58, 0x0D09, 0x0A3C, 0x0BD9, 0x0973,
+        0x0B59, 0x08DA, 0x08D9, 0x05E9, 0x07EC, 0x04B0, 0x06EF, 0x03D2,
+        0x05EA, 0x031D, 0x031C, 0x0238, 0x0154, 0x00AA, 0x8000, 0x8000
+    },
+    /* hall */
+    {
+        0x01A5, 0x0139, 0x6000, 0x5000, 0x4C00, 0xB800, 0xBC00, 0xC000,
+        0x6000, 0x5C00, 0x15BA, 0x11BB, 0x14C2, 0x10BD, 0x11BC, 0x0DC1,
+        0x11C0, 0x0DC3, 0x0DC0, 0x09C1, 0x0BC4, 0x07C1, 0x0A00, 0x06CD,
+        0x09C2, 0x05C1, 0x05C0, 0x041A, 0x0274, 0x013A, 0x8000, 0x8000
+    },
+    /* space */
+    {
+        0x033D, 0x0231, 0x7E00, 0x5000, 0xB400, 0xB000, 0x4C00, 0xB000,
+        0x6000, 0x5400, 0x1ED6, 0x1A31, 0x1D14, 0x183B, 0x1BC2, 0x16B2,
+        0x1A32, 0x15EF, 0x15EE, 0x1055, 0x1334, 0x0F2D, 0x11F6, 0x0C5D,
+        0x1056, 0x0AE1, 0x0AE0, 0x07A2, 0x0464, 0x0232, 0x8000, 0x8000
+    },
+    /* echo */
+    {
+        0x0001, 0x0001, 0x7FFF, 0x7FFF, 0x0000, 0x0000, 0x0000, 0x8100,
+        0x0000, 0x0000, 0x1FFF, 0x0FFF, 0x1005, 0x0005, 0x0000, 0x0000,
+        0x1005, 0x0005, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+        0x0000, 0x0000, 0x1004, 0x1002, 0x0004, 0x0002, 0x8000, 0x8000
+    },
+    /* delay */
+    {
+        0x0001, 0x0001, 0x7FFF, 0x7FFF, 0x0000, 0x0000, 0x0000, 0x0000,
+        0x0000, 0x0000, 0x1FFF, 0x0FFF, 0x1005, 0x0005, 0x0000, 0x0000,
+        0x1005, 0x0005, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+        0x0000, 0x0000, 0x1004, 0x1002, 0x0004, 0x0002, 0x8000, 0x8000
+    },
+    /* pipe */
+    {
+        0x0017, 0x0013, 0x70F0, 0x4FA8, 0xBCE0, 0x4510, 0xBEF0, 0x8500,
+        0x5F80, 0x54C0, 0x0371, 0x02AF, 0x02E5, 0x01DF, 0x02B0, 0x01D7,
+        0x0358, 0x026A, 0x01D6, 0x011E, 0x012D, 0x00B1, 0x011F, 0x0059,
+        0x01A0, 0x00E3, 0x0058, 0x0040, 0x0028, 0x0014, 0x8000, 0x8000
+    },
+};
+
+static unsigned int reverb_work_area_size[SPU_REV_MODE_MAX] =
+{
+    64,    /* off */
+    4960,  /* room */
+    4000,  /* studio a */
+    9248,  /* studio b */
+    14320, /* studio c */
+    22256, /* hall */
+    31584, /* space */
+    49184, /* echo */
+    49184, /* delay */
+    7680   /* pipe */
 };
 
 static short reverb_fir_coeffs[] =
@@ -493,148 +604,88 @@ static void spu_process_reverb(int l, int r)
     float diff;
     float out;
     float temp;
+    int sample;
 
     l = spu_saturate(l);
-    r = spu_saturate(r);
-
     reverb_downsample_buffer[0][reverb_filter_index] = l;
-    reverb_downsample_buffer[1][reverb_filter_index] = r;
-
     reverb_downsample_buffer[0][reverb_filter_index + 64] = l;
+
+    r = spu_saturate(r);
+    reverb_downsample_buffer[1][reverb_filter_index] = r;
     reverb_downsample_buffer[1][reverb_filter_index + 64] = r;
 
     if (reverb_filter_index & 0x1)
     {
-        /* downsample the input to 22.05 kHz */
-        l = spu_reverb_downsample(&reverb_downsample_buffer[0][(reverb_filter_index - 38) & 0x3f]);
+        for (int i = 0; i < 2; i++)
+        {
+            /* downsample the input to 22.05 kHz */
+            sample = spu_reverb_downsample(&reverb_downsample_buffer[i][(reverb_filter_index - 38) & 0x3f]);
 
-        /* apply reverb volume to input */
-        in = i16_to_f32(l) * i16_to_f32(rattr.lin);
+            /* apply reverb volume to input */
+            in = i16_to_f32(sample) * i16_to_f32(rattr.in[i]);
 
-        /* apply same-side reflection */
-        temp = spu_reverb_read(rattr.lsamed * 4);
-        same = in + temp * i16_to_f32(rattr.wall);
+            /* apply same-side reflection */
+            temp = spu_reverb_read(rattr.samed[i] * 4);
+            same = in + temp * i16_to_f32(rattr.wall);
 
-        temp = spu_reverb_read(rattr.lsamem * 4 - 1);
-        same = temp + (same - temp) * i16_to_f32(rattr.iir);
+            temp = spu_reverb_read(rattr.samem[i] * 4 - 1);
+            same = temp + (same - temp) * i16_to_f32(rattr.iir);
 
-        spu_reverb_write(rattr.lsamem * 4, same);
+            spu_reverb_write(rattr.samem[i] * 4, same);
 
-        /* apply opposite-side reflection */
-        temp = spu_reverb_read(rattr.rdiffd * 4);
-        diff = in + temp * i16_to_f32(rattr.wall);
+             /* apply opposite-side reflection */
+            temp = spu_reverb_read(rattr.diffd[i ^ 1] * 4);
+            diff = in + temp * i16_to_f32(rattr.wall);
 
-        temp = spu_reverb_read(rattr.ldiffm * 4 - 1);
-        diff = temp + (diff - temp) * i16_to_f32(rattr.iir);
+            temp = spu_reverb_read(rattr.diffm[i] * 4 - 1);
+            diff = temp + (diff - temp) * i16_to_f32(rattr.iir);
 
-        spu_reverb_write(rattr.ldiffm * 4, diff);
+            spu_reverb_write(rattr.diffm[i] * 4, diff);
 
-        /* apply early echo */
-        temp = spu_reverb_read(rattr.lcomb1 * 4);
-        out = temp * i16_to_f32(rattr.comb1);
+            /* apply early echo */
+            temp = spu_reverb_read(rattr.combm1[i] * 4);
+            out = temp * i16_to_f32(rattr.combv1);
 
-        temp = spu_reverb_read(rattr.lcomb2 * 4);
-        out += temp * i16_to_f32(rattr.comb2);
+            temp = spu_reverb_read(rattr.combm2[i] * 4);
+            out += temp * i16_to_f32(rattr.combv2);
 
-        temp = spu_reverb_read(rattr.lcomb3 * 4);
-        out += temp * i16_to_f32(rattr.comb3);
+            temp = spu_reverb_read(rattr.combm3[i] * 4);
+            out += temp * i16_to_f32(rattr.combv3);
 
-        temp = spu_reverb_read(rattr.lcomb4 * 4);
-        out += temp * i16_to_f32(rattr.comb4);
+            temp = spu_reverb_read(rattr.combm4[i] * 4);
+            out += temp * i16_to_f32(rattr.combv4);
 
-        /* apply first reverb apf */
-        temp = spu_reverb_read((rattr.lapf1 - rattr.apfd1) * 4);
-        out -= temp * i16_to_f32(rattr.apfv1);
+            /* apply first reverb apf */
+            temp = spu_reverb_read((rattr.apf1[i] - rattr.apfd1) * 4);
+            out -= temp * i16_to_f32(rattr.apfv1);
 
-        spu_reverb_write(rattr.lapf1 * 4, out);
+            spu_reverb_write(rattr.apf1[i] * 4, out);
 
-        out = out * i16_to_f32(rattr.apfv1) + temp;
+            out = out * i16_to_f32(rattr.apfv1) + temp;
 
-        /* apply second reverb apf */
-        temp = spu_reverb_read((rattr.lapf2 - rattr.apfd2) * 4);
-        out -= temp * i16_to_f32(rattr.apfv2);
+            /* apply second reverb apf */
+            temp = spu_reverb_read((rattr.apf2[i] - rattr.apfd2) * 4);
+            out -= temp * i16_to_f32(rattr.apfv2);
 
-        spu_reverb_write(rattr.lapf2 * 4, out);
+            spu_reverb_write(rattr.apf2[i] * 4, out);
 
-        out = out * i16_to_f32(rattr.apfv2) + temp;
+            out = out * i16_to_f32(rattr.apfv2) + temp;
 
-        /* apply output volume */
-        out *= i16_to_f32(rvoll);
-        l = f32_to_i16(out);
+            /* apply output volume */
+            out *= i16_to_f32(rvol[i]);
+            sample = f32_to_i16(out);
 
-        reverb_upsample_buffer[0][reverb_filter_index >> 1] = l;
-        reverb_upsample_buffer[0][(reverb_filter_index >> 1) + 32] = l;
+            reverb_upsample_buffer[i][reverb_filter_index >> 1] = sample;
+            reverb_upsample_buffer[i][(reverb_filter_index >> 1) + 32] = sample;
 
-        /* upsample the output to 44.1 kHz */
-        last_rev_l = spu_reverb_upsample(&reverb_upsample_buffer[0][((reverb_filter_index >> 1) - 19) & 0x1f]);
-
-        /* downsample the input to 22.05 kHz */
-        r = spu_reverb_downsample(&reverb_downsample_buffer[1][(reverb_filter_index - 38) & 0x3f]);
-
-        /* apply reverb volume to input */
-        in = i16_to_f32(r) * i16_to_f32(rattr.lin);
-
-        /* apply same-side reflection */
-        temp = spu_reverb_read(rattr.rsamed * 4);
-        same = in + temp * i16_to_f32(rattr.wall);
-
-        temp = spu_reverb_read(rattr.rsamem * 4 - 1);
-        same = temp + (same - temp) * i16_to_f32(rattr.iir);
-
-        spu_reverb_write(rattr.rsamem * 4, same);
-
-        /* apply opposite-side reflection */
-        temp = spu_reverb_read(rattr.ldiffd * 4);
-        diff = in + temp * i16_to_f32(rattr.wall);
-
-        temp = spu_reverb_read(rattr.rdiffm * 4 - 1);
-        diff = temp + (diff - temp) * i16_to_f32(rattr.iir);
-
-        spu_reverb_write(rattr.rdiffm * 4, diff);
-
-        /* apply early echo */
-        temp = spu_reverb_read(rattr.rcomb1 * 4);
-        out = temp * i16_to_f32(rattr.comb1);
-
-        temp = spu_reverb_read(rattr.rcomb2 * 4);
-        out += temp * i16_to_f32(rattr.comb2);
-
-        temp = spu_reverb_read(rattr.rcomb3 * 4);
-        out += temp * i16_to_f32(rattr.comb3);
-
-        temp = spu_reverb_read(rattr.rcomb4 * 4);
-        out += temp * i16_to_f32(rattr.comb4);
-
-        /* apply first reverb apf */
-        temp = spu_reverb_read((rattr.rapf1 - rattr.apfd1) * 4);
-        out -= temp * i16_to_f32(rattr.apfv1);
-
-        spu_reverb_write(rattr.rapf1 * 4, out);
-
-        out = out * i16_to_f32(rattr.apfv1) + temp;
-
-        /* apply second reverb apf */
-        temp = spu_reverb_read((rattr.rapf2 - rattr.apfd2) * 4);
-        out -= temp * i16_to_f32(rattr.apfv2);
-
-        spu_reverb_write(rattr.rapf2 * 4, out);
-
-        out = out * i16_to_f32(rattr.apfv2) + temp;
-
-        /* apply output volume */
-        out *= i16_to_f32(rvolr);
-        r = f32_to_i16(out);
-
-        reverb_upsample_buffer[1][reverb_filter_index >> 1] = r;
-        reverb_upsample_buffer[1][(reverb_filter_index >> 1) + 32] = r;
-
-        /* upsample the output to 44.1 kHz */
-        last_rev_r = spu_reverb_upsample(&reverb_upsample_buffer[1][((reverb_filter_index >> 1) - 19) & 0x1f]);
+            /* upsample the output to 44.1 kHz */
+            last_rev[i] = spu_reverb_upsample(&reverb_upsample_buffer[i][((reverb_filter_index >> 1) - 19) & 0x1f]);
+        }
     }
     else
     {
-        last_rev_l = reverb_upsample_buffer[0][((reverb_filter_index >> 1) - 10) & 0x1f];
-        last_rev_r = reverb_upsample_buffer[1][((reverb_filter_index >> 1) - 10) & 0x1f];
+        last_rev[0] = reverb_upsample_buffer[0][((reverb_filter_index >> 1) - 10) & 0x1f];
+        last_rev[1] = reverb_upsample_buffer[1][((reverb_filter_index >> 1) - 10) & 0x1f];
     }
 
     /* increment the reverb index */
@@ -679,19 +730,19 @@ static void spu_tick(short *output)
         spu_process_reverb(wetl, wetr);
     }
 
-    outl = spu_saturate(dryl + last_rev_l);
-    outr = spu_saturate(dryr + last_rev_r);
+    outl = spu_saturate(dryl + last_rev[0]);
+    outr = spu_saturate(dryr + last_rev[1]);
 
-    output[output_index++] = apply_volume(outl, mvoll << 1);
-    output[output_index++] = apply_volume(outr, mvolr << 1);
+    output[output_index++] = apply_volume(outl, mvol[0] << 1);
+    output[output_index++] = apply_volume(outr, mvol[1] << 1);
 }
 
 void spu_init(void)
 {
-    mvoll = 0;
-    mvolr = 0;
-    rvoll = 0;
-    rvolr = 0;
+    mvol[0] = 0;
+    mvol[1] = 0;
+    rvol[0] = 0;
+    rvol[1] = 0;
 
     memset(waveform_data, 0xff, sizeof(waveform_data));
     memset(reverb_work_area, 0, sizeof(reverb_work_area));
@@ -761,17 +812,17 @@ void spu_set_reverb_mode(int mode)
     assert(mode == SPU_REV_MODE_HALL);
     assert(ren == 0);
 
-    rvoll = 0;
-    rvolr = 0;
+    rvol[0] = 0;
+    rvol[1] = 0;
 
-    rattr = reverb_mode_attr[mode];
+    memcpy(&rattr, &reverb_mode_attr[mode], sizeof(rattr));
     rsize = reverb_work_area_size[mode];
 }
 
 void spu_set_reverb_depth(short l, short r)
 {
-    rvoll = l;
-    rvolr = r;
+    rvol[0] = l;
+    rvol[1] = r;
 }
 
 void spu_set_reverb_on(unsigned int mask)
@@ -911,6 +962,6 @@ void spu_set_master_volume(unsigned short l, unsigned short r)
         printf("warning: unsupported master volume envelope\n");
     }
 
-    mvoll = l & 0x7fff;
-    mvolr = r & 0x7fff;
+    mvol[0] = l & 0x7fff;
+    mvol[1] = r & 0x7fff;
 }
