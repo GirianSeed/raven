@@ -20,9 +20,11 @@ void vector_term(vector *vec)
 
 void vector_push(vector *vec, const void *data, size_t size)
 {
-    if ((vec->size + size) > vec->capacity)
+    size_t new_size = vec->size + size;
+
+    if (new_size > vec->capacity)
     {
-        vec->capacity = vec->size + size;
+        vec->capacity = new_size;
         vec->data = realloc(vec->data, vec->capacity);
     }
 
