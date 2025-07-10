@@ -45,3 +45,5 @@ This branch adds changes to the original library required to play songs used by 
 - Increased the sampling rate of the SPU from 44.1 kHz to 48 kHz to match the PS2.
 - Changes the timestep from 448 samples per tick to 240 samples per tick to match MGS2's 5 ms timer.
 - Added support for loading the sdx data format used in MGS2.
+
+This version of the library also supports music used in the Zone of the Enders series.
