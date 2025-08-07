@@ -334,7 +334,7 @@ static void set_adsr(voice *v)
 
     if (rate < 44)
     {
-        step <<= 11 - (rate >> 2);
+        step = (unsigned int)step << (11 - (rate >> 2));
     }
     else if (rate >= 48)
     {
@@ -417,7 +417,7 @@ static void tick_adsr(voice *v)
     else if (v->step == STEP_RELEASE && v->env == 0)
     {
         v->step = STEP_OFF;
-        endx |= 1 << (v - voices);
+        endx |= 1u << (v - voices);
         set_adsr(v);
     }
 }
@@ -718,7 +718,7 @@ static void tick(short *output)
         dryl += vl;
         dryr += vr;
 
-        if (ren && (vmixr & (1 << i)))
+        if (ren && (vmixr & (1u << i)))
         {
             wetl += vl;
             wetr += vr;
@@ -912,9 +912,9 @@ void spu_set_key_on(unsigned int keys)
 {
     for (int i = 0; i < SPU_NCH; i++)
     {
-        if (keys & (1 << i))
+        if (keys & (1u << i))
         {
-            endx &= ~(1 << i);
+            endx &= ~(1u << i);
 
             voices[i].step = STEP_ATTACK;
             voices[i].addr = voices[i].ssa;
@@ -937,7 +937,7 @@ void spu_set_key_off(unsigned int keys)
 {
     for (int i = 0; i < SPU_NCH; i++)
     {
-        if (keys & (1 << i))
+        if (keys & (1u << i))
         {
             if (voices[i].env == 0)
             {

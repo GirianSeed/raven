@@ -196,7 +196,7 @@ void IntSdMain(void)
 
             for (mtrack = 0; mtrack < SD_BGM_VOICES; mtrack++)
             {
-                keyd = 1 << mtrack;
+                keyd = 1u << mtrack;
 
                 if ((song_end & keyd) == 0)
                 {
@@ -613,7 +613,7 @@ void SngFadeInt(void)
             }
         }
 
-        sng_master_vol[i] = (unsigned int)(vol * mix_fader[i].vol) / 0xffff;
+        sng_master_vol[i] = ((unsigned int)vol * mix_fader[i].vol) / 0xffff;
     }
 }
 

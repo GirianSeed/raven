@@ -199,7 +199,7 @@ extern  unsigned char *mptr;
 extern  int            se_rev_on;
 extern  SOUND_W       *sptr;
 extern  SPU_TRACK_REG  spu_tr_wk[SD_N_VOICES];
-extern  int            sng_master_vol[SD_BGM_VOICES];
+extern  unsigned int   sng_master_vol[SD_BGM_VOICES];
 extern  unsigned int   skip_intro_loop;
 extern  FADER          mix_fader[SD_BGM_VOICES];
 extern  unsigned int   auto_phase_fg;

@@ -50,7 +50,7 @@ unsigned char *mptr;
 int            se_rev_on;
 SOUND_W       *sptr;
 SPU_TRACK_REG  spu_tr_wk[SD_N_VOICES];
-int            sng_master_vol[SD_BGM_VOICES];
+unsigned int   sng_master_vol[SD_BGM_VOICES];
 unsigned int   skip_intro_loop;
 FADER          mix_fader[SD_BGM_VOICES];
 unsigned int   auto_phase_fg;
