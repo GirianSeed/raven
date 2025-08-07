@@ -152,7 +152,6 @@ extern SETBL se_tbl[128];
 /* in sd_wk.c */
 extern  int            sd_debug_mode;
 extern  int            song_loop_count;
-extern  unsigned int   sd_drum_index;
 extern  unsigned int   key_fg;
 extern  int            sd_code_set;
 extern  int            sng_syukan_vol;
@@ -195,6 +194,7 @@ extern  int            sound_mono_fg;
 extern  unsigned int   keyd;
 extern  unsigned char  se_header[0x2800];
 extern  WAVE_W         voice_tbl[512];
+extern  WAVE_W         drum_tbl[512];
 extern  unsigned char *mptr;
 extern  int            se_rev_on;
 extern  SOUND_W       *sptr;

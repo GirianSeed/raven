@@ -3,7 +3,6 @@
 
 int            sd_debug_mode;
 int            song_loop_count;
-unsigned int   sd_drum_index;
 unsigned int   key_fg;
 int            sd_code_set;
 int            sng_syukan_vol;
@@ -46,6 +45,7 @@ int            sound_mono_fg;
 unsigned int   keyd;
 unsigned char  se_header[0x2800];
 WAVE_W         voice_tbl[512];
+WAVE_W         drum_tbl[512];
 unsigned char *mptr;
 int            se_rev_on;
 SOUND_W       *sptr;

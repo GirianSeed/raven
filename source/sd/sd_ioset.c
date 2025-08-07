@@ -179,7 +179,7 @@ void tone_set(unsigned int num)
     }
     else
     {
-        sample = &voice_tbl[num - 512 + sd_drum_index];
+        sample = &drum_tbl[num - 512];
     }
 
     if (sample->addr == 0xFFFFFFFF)

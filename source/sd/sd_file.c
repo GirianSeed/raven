@@ -6,6 +6,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 static int sd_sng_data_load(FILE *fp, size_t size)
 {
@@ -46,9 +47,10 @@ static int sd_wav_data_load(FILE *fp, size_t size)
 {
     WAVE_H header;
     size_t rb;
+    int drum_offset;
     unsigned int last_addr;
-    unsigned int entry;
     unsigned int addr;
+    WAVE_W *table;
     char *data;
 
     (void)size;
@@ -67,29 +69,54 @@ static int sd_wav_data_load(FILE *fp, size_t size)
     assert((header.offset % sizeof(header)) == 0);
     assert((header.size % sizeof(header)) == 0);
 
-    /* read wave table */
-    rb = fread((char *)voice_tbl + header.offset, header.size, 1, fp);
-    if (rb != 1)
+    SD_PRINT("wave data offset = %x\n", header.offset);
+    SD_PRINT("wave data size = %x\n", header.size);
+
+    table = malloc(header.size);
+    if (table == NULL)
     {
-        SD_PRINT("ERROR:unable to read wave table\n");
+        SD_PRINT("ERROR:unable to allocate wave table temp\n");
         return 1;
     }
 
-    last_addr = 0;
-    for (unsigned int i = 0; i < header.size; i += 16)
+    /* read wave table */
+    rb = fread(table, header.size, 1, fp);
+    if (rb != 1)
     {
-        entry = (header.offset + i) / 16;
-        addr = voice_tbl[entry].addr;
+        SD_PRINT("ERROR:unable to read wave table\n");
+        free(table);
+        return 1;
+    }
+
+    drum_offset = -1;
+    last_addr = 0;
+    for (unsigned int i = 0; i < header.size / sizeof(WAVE_W); i++)
+    {
+        addr = table[i].addr;
 
         if (addr < last_addr)
         {
-            SD_PRINT("drum start found at entry %u\n", entry);
-            sd_drum_index = entry;
+            SD_PRINT("drum start found at entry %u\n", i);
+            drum_offset = i * sizeof(WAVE_W);
             break;
         }
 
         last_addr = addr;
     }
+
+    if (drum_offset < 0)
+    {
+        /* load the entire file to the voice table */
+        memcpy((char *)voice_tbl + header.offset, table, header.size);
+    }
+    else
+    {
+        /* load each section to the correct table */
+        memcpy((char *)voice_tbl + header.offset, table, drum_offset);
+        memcpy(drum_tbl, (char *)table + drum_offset, header.size - drum_offset);
+    }
+
+    free(table);
 
     /* read wave data header */
     rb = fread(&header, sizeof(header), 1, fp);
