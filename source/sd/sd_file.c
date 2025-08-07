@@ -202,6 +202,7 @@ int sd_pack_data_load(const char *name)
         goto error;
     }
 
+    fclose(fp);
     return 0;
 
 error:
