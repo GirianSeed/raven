@@ -842,8 +842,8 @@ void spu_reverb_clear(void)
 
 void spu_write(unsigned int addr, char *ptr, unsigned int size)
 {
-    addr = (addr + 0x7) & ~0x7;
-    size = (size + 0x3f) & ~0x3f;
+    assert((addr % 0x8) == 0);
+    assert((addr + size) <= sizeof(waveform_data));
     memcpy((char *)waveform_data + addr, ptr, size);
 }
 
