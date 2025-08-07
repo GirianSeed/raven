@@ -175,7 +175,7 @@ void IntSdMain(void)
 
             for (mtrack = 0; mtrack < SD_BGM_VOICES; mtrack++)
             {
-                keyd = 1 << mtrack;
+                keyd = 1u << mtrack;
 
                 if ((song_end & keyd) == 0)
                 {
