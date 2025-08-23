@@ -681,15 +681,15 @@ static void process_reverb(int l, int r)
             /* upsample the output to 44.1 kHz */
             last_rev[i] = reverb_upsample(&reverb_upsample_buffer[i][((reverb_filter_index >> 1) - 19) & 0x1f]);
         }
+
+        /* increment the reverb index */
+        raddr = (raddr + 1) % rsize;
     }
     else
     {
         last_rev[0] = reverb_upsample_buffer[0][((reverb_filter_index >> 1) - 10) & 0x1f];
         last_rev[1] = reverb_upsample_buffer[1][((reverb_filter_index >> 1) - 10) & 0x1f];
     }
-
-    /* increment the reverb index */
-    raddr = (raddr + 1) % rsize;
 
     reverb_filter_index = (reverb_filter_index + 1) & 0x3f;
 }
