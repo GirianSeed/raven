@@ -552,12 +552,12 @@ static void tick_voice(voice *v, int *l, int *r)
 
 static float i16_to_f32(short value)
 {
-    return (float)value / ((value < 0) ? 32768 : 32767);
+    return (float)value / 32767.0f;
 }
 
 static short f32_to_i16(float value)
 {
-    return CLAMP(value, -1.0f, 1.0f) * ((value < 0.0f) ? 32768.0f : 32767.0f);
+    return CLAMP(value, -1.0f, 1.0f) * 32767.0f;
 }
 
 static float reverb_read(unsigned int addr)
