@@ -171,7 +171,7 @@ void tone_set(unsigned char num)
 {
     if (voice_tbl[num].addr == 0xFFFFFFFF)
     {
-        SD_PRINT("track %d missing sample %d!\n", mtrack, num);
+        SD_WARN("track %d missing sample %d!\n", mtrack, num);
     }
 
     spu_tr_wk[mtrack].addr = voice_tbl[num].addr;

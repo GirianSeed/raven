@@ -29,6 +29,8 @@
     }                        \
 })
 
+#define SD_WARN(...) printf(__VA_ARGS__)
+
 /* sd_main.c */
 void sd_init(int debug, int loop, int reverb);
 void sd_term(void);

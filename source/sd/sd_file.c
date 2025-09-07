@@ -16,7 +16,7 @@ int sd_sng_data_load(const char *name)
     fp = fopen(name, "rb");
     if (fp == NULL)
     {
-        SD_PRINT("ERROR:could not open song file %s\n", name);
+        SD_WARN("ERROR:could not open song file %s\n", name);
         return 1;
     }
 
@@ -26,14 +26,14 @@ int sd_sng_data_load(const char *name)
 
     if (size > sizeof(sng_data))
     {
-        SD_PRINT("ERROR:song data size exceeds max %zx\n", size);
+        SD_WARN("ERROR:song data size exceeds max %zx\n", size);
         goto error;
     }
 
     rb = fread(sng_data, size, 1, fp);
     if (rb != 1)
     {
-        SD_PRINT("ERROR:unable to read song data\n");
+        SD_WARN("ERROR:unable to read song data\n");
         goto error;
     }
 
@@ -57,7 +57,7 @@ int sd_se_data_load(const char *name)
     fp = fopen(name, "rb");
     if (fp == NULL)
     {
-        SD_PRINT("ERROR:could not open se file %s\n", name);
+        SD_WARN("ERROR:could not open se file %s\n", name);
         return 1;
     }
 
@@ -67,14 +67,14 @@ int sd_se_data_load(const char *name)
 
     if (size > sizeof(se_header))
     {
-        SD_PRINT("ERROR:se data size exceeds max %zx\n", size);
+        SD_WARN("ERROR:se data size exceeds max %zx\n", size);
         goto error;
     }
 
     rb = fread(se_header, size, 1, fp);
     if (rb != 1)
     {
-        SD_PRINT("ERROR:unable to read se data\n");
+        SD_WARN("ERROR:unable to read se data\n");
         goto error;
     }
 
@@ -108,7 +108,7 @@ int sd_wav_data_load(const char *name)
     fp = fopen(name, "rb");
     if (fp == NULL)
     {
-        SD_PRINT("ERROR:could not open wave file %s\n", name);
+        SD_WARN("ERROR:could not open wave file %s\n", name);
         return 1;
     }
 
@@ -116,7 +116,7 @@ int sd_wav_data_load(const char *name)
     rb = fread(&header, sizeof(header), 1, fp);
     if (rb != 1)
     {
-        SD_PRINT("ERROR:unable to read wave table header\n");
+        SD_WARN("ERROR:unable to read wave table header\n");
         goto error;
     }
 
@@ -130,7 +130,7 @@ int sd_wav_data_load(const char *name)
     rb = fread((char *)voice_tbl + header.offset, header.size, 1, fp);
     if (rb != 1)
     {
-        SD_PRINT("ERROR:unable to read wave table\n");
+        SD_WARN("ERROR:unable to read wave table\n");
         goto error;
     }
 
@@ -138,7 +138,7 @@ int sd_wav_data_load(const char *name)
     rb = fread(&header, sizeof(header), 1, fp);
     if (rb != 1)
     {
-        SD_PRINT("ERROR:unable to read wave data header\n");
+        SD_WARN("ERROR:unable to read wave data header\n");
         goto error;
     }
 
@@ -148,7 +148,7 @@ int sd_wav_data_load(const char *name)
     data = malloc(header.size);
     if (data == NULL)
     {
-        SD_PRINT("ERROR:unable to allocate wave data temp\n");
+        SD_WARN("ERROR:unable to allocate wave data temp\n");
         goto error;
     }
 
@@ -156,7 +156,7 @@ int sd_wav_data_load(const char *name)
     rb = fread(data, header.size, 1, fp);
     if (rb != 1)
     {
-        SD_PRINT("ERROR:unable to read wave data\n");
+        SD_WARN("ERROR:unable to read wave data\n");
         goto error2;
     }
 
