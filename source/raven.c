@@ -1,6 +1,3 @@
-#include "vector.h"
-#include "wave.h"
-
 #include "sd/sd_cli.h"
 #include "spu/spu.h"
 
@@ -8,18 +5,22 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <opusenc.h>
+
 #define STEP_SIZE 448
 
 int main(int argc, char **argv)
 {
-    vector samples;
+    OggOpusComments *com;
+    OggOpusEnc *enc;
+    int err;
     short buffer[STEP_SIZE * 2];
 
     const char *mdx = NULL;
     const char *wvx[3] = {NULL, NULL, NULL};
 
     int debug = 0;
-    const char *output = "output.wav";
+    const char *output = "output.ogg";
     int loops = 1;
     int song = 1;
     int reverb = 1;
@@ -110,9 +111,11 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    if (vector_init(&samples, 0))
+    com = ope_comments_create();
+    enc = ope_encoder_create_file(output, com, 44100, 2, 0, &err);
+    if (!enc)
     {
-        printf("error: vector_init failed!\n");
+        printf("error: opus encoder creation failed! %s\n", ope_strerror(err));
         return 1;
     }
 
@@ -138,19 +141,16 @@ int main(int argc, char **argv)
         sd_tick();
         spu_step(STEP_SIZE, buffer);
 
-        vector_push(&samples, buffer, sizeof(buffer));
+        ope_encoder_write(enc, buffer, STEP_SIZE);
     }
     while (sd_sng_play() || sd_se_play());
 
-    if (write_wave_file(output, samples.data, samples.size))
-    {
-        printf("error: failed to write output wave file!\n");
-    }
+    ope_encoder_drain(enc);
+    ope_encoder_destroy(enc);
+    ope_comments_destroy(com);
 
-    printf("wave file written to %s\n", output);
+    printf("output written to %s\n", output);
 
     sd_term();
-    vector_term(&samples);
-
     return 0;
 }
