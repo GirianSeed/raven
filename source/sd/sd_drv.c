@@ -136,7 +136,7 @@ void IntSdMain(void)
         n_songs = sng_data[0];
         if ((code & 0xF) > n_songs)
         {
-            SD_PRINT("ERROR:SNG PLAY CODE(%x/%x)\n", code & 0xF, n_songs);
+            SD_WARN("ERROR:SNG PLAY CODE(%x/%x)\n", code & 0xF, n_songs);
             break;
         }
 
@@ -165,7 +165,7 @@ void IntSdMain(void)
         break;
 
     default:
-        SD_PRINT("ERROR:UNK SNG PLAY CODE(%x)\n", code);
+        SD_WARN("ERROR:UNK SNG PLAY CODE(%x)\n", code);
         break;
     }
 

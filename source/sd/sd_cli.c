@@ -145,7 +145,7 @@ static void set_sng_code_buf(unsigned int code)
         return;
     }
 
-    SD_PRINT("***TooMuchBGMSoundCode(%x)***\n", code);
+    SD_WARN("***TooMuchBGMSoundCode(%x)***\n", code);
 }
 
 
@@ -204,7 +204,7 @@ static void sd_set(unsigned int sound_code)
             return;
         }
 
-        SD_PRINT("sd_set:unknown code (code=%x)\n", sound_code);
+        SD_WARN("sd_set:unknown code (code=%x)\n", sound_code);
     }
 }
 
@@ -212,7 +212,7 @@ int sd_set_cli(int sound_code, int sync_mode)
 {
     if (sync_mode != SD_ASYNC)
     {
-        SD_PRINT("sd_set_cli:unsupported sync_mode\n");
+        SD_WARN("sd_set_cli:unsupported sync_mode\n");
         return 1;
     }
 

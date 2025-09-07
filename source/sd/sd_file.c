@@ -14,14 +14,14 @@ static int sd_sng_data_load(FILE *fp, size_t size)
 
     if (size > sizeof(sng_data))
     {
-        SD_PRINT("ERROR:song data size exceeds max %zx\n", size);
+        SD_WARN("ERROR:song data size exceeds max %zx\n", size);
         return 1;
     }
 
     rb = fread(sng_data, size, 1, fp);
     if (rb != 1)
     {
-        SD_PRINT("ERROR:unable to read song data\n");
+        SD_WARN("ERROR:unable to read song data\n");
         return 1;
     }
 
@@ -59,7 +59,7 @@ static int sd_wav_data_load(FILE *fp, size_t size)
     rb = fread(&header, sizeof(header), 1, fp);
     if (rb != 1)
     {
-        SD_PRINT("ERROR:unable to read wave table header\n");
+        SD_WARN("ERROR:unable to read wave table header\n");
         return 1;
     }
 
@@ -75,7 +75,7 @@ static int sd_wav_data_load(FILE *fp, size_t size)
     table = malloc(header.size);
     if (table == NULL)
     {
-        SD_PRINT("ERROR:unable to allocate wave table temp\n");
+        SD_WARN("ERROR:unable to allocate wave table temp\n");
         return 1;
     }
 
@@ -83,7 +83,7 @@ static int sd_wav_data_load(FILE *fp, size_t size)
     rb = fread(table, header.size, 1, fp);
     if (rb != 1)
     {
-        SD_PRINT("ERROR:unable to read wave table\n");
+        SD_WARN("ERROR:unable to read wave table\n");
         free(table);
         return 1;
     }
@@ -122,7 +122,7 @@ static int sd_wav_data_load(FILE *fp, size_t size)
     rb = fread(&header, sizeof(header), 1, fp);
     if (rb != 1)
     {
-        SD_PRINT("ERROR:unable to read wave data header\n");
+        SD_WARN("ERROR:unable to read wave data header\n");
         return 1;
     }
 
@@ -132,7 +132,7 @@ static int sd_wav_data_load(FILE *fp, size_t size)
     data = malloc(header.size);
     if (data == NULL)
     {
-        SD_PRINT("ERROR:unable to allocate wave data temp\n");
+        SD_WARN("ERROR:unable to allocate wave data temp\n");
         return 1;
     }
 
@@ -140,7 +140,7 @@ static int sd_wav_data_load(FILE *fp, size_t size)
     rb = fread(data, header.size, 1, fp);
     if (rb != 1)
     {
-        SD_PRINT("ERROR:unable to read wave data\n");
+        SD_WARN("ERROR:unable to read wave data\n");
         free(data);
         return 1;
     }
@@ -165,7 +165,7 @@ int sd_pack_data_load(const char *name)
     fp = fopen(name, "rb");
     if (fp == NULL)
     {
-        SD_PRINT("ERROR:unable to open sound pack file\n");
+        SD_WARN("ERROR:unable to open sound pack file\n");
         return 1;
     }
 
@@ -176,7 +176,7 @@ int sd_pack_data_load(const char *name)
     rb = fread(&header, sizeof(header), 1, fp);
     if (rb != 1)
     {
-        SD_PRINT("ERROR:unable to read sound pack header\n");
+        SD_WARN("ERROR:unable to read sound pack header\n");
         goto error;
     }
 
@@ -191,14 +191,14 @@ int sd_pack_data_load(const char *name)
     fseek(fp, header.offset_bgm_waveform, SEEK_SET);
     if (sd_wav_data_load(fp, bgm_waveform_size))
     {
-        SD_PRINT("ERROR:unable to read BGM waveform data\n");
+        SD_WARN("ERROR:unable to read BGM waveform data\n");
         goto error;
     }
 
     fseek(fp, header.offset_bgm_sequence, SEEK_SET);
     if (sd_sng_data_load(fp, bgm_sequence_size))
     {
-        SD_PRINT("ERROR:unable to read BGM sequence data\n");
+        SD_WARN("ERROR:unable to read BGM sequence data\n");
         goto error;
     }
 

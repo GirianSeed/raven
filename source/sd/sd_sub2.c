@@ -488,7 +488,7 @@ void block_end(void)
 
 void fxs_set(void)
 {
-    SD_PRINT("track %u: unimplemented fxs_set %x %x\n", mtrack, mdata2 & 0xFF, mdata3);
+    SD_WARN("track %u: unimplemented fxs_set %x %x\n", mtrack, mdata2 & 0xFF, mdata3);
 
     sptr->fxt = mdata2;
     sptr->fxs = mdata3;
@@ -497,7 +497,7 @@ void fxs_set(void)
 
 void fxe_set(void)
 {
-    SD_PRINT("track %u: unimplemented fxe_set\n", mtrack);
+    SD_WARN("track %u: unimplemented fxe_set\n", mtrack);
 
     /* TODO */
 
@@ -781,16 +781,16 @@ void at8_set(void)
 void mno_set(void)
 {
     // This command is useless as sfx and vox have been stripped out.
-    SD_PRINT("track %u: unimplemented mno_set\n", mtrack);
+    SD_WARN("track %u: unimplemented mno_set\n", mtrack);
 }
 
 void flg_set(void)
 {
     // This command is useless as sfx and vox have been stripped out.
-    SD_PRINT("track %u: unimplemented flg_set\n", mtrack);
+    SD_WARN("track %u: unimplemented flg_set\n", mtrack);
 }
 
 void no_cmd(void)
 {
-    SD_PRINT("track %d, unknown command %x\n", mtrack, mdata1);
+    SD_WARN("track %d, unknown command %x\n", mtrack, mdata1);
 }

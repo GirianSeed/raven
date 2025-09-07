@@ -184,7 +184,7 @@ void tone_set(unsigned int num)
 
     if (sample->addr == 0xFFFFFFFF)
     {
-        SD_PRINT("track %d missing sample %d!\n", mtrack, num);
+        SD_WARN("track %d missing sample %d!\n", mtrack, num);
     }
 
     spu_tr_wk[mtrack].addr = sample->addr;
