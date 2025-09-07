@@ -5,9 +5,6 @@ TARGET      = raven
 SRCS        = source/raven.c
 OBJS        = $(SRCS:.c=.o)
 
-# add lib sources
-SRCS        += source/lib/cbuf.c source/lib/vector.c source/lib/wave.c
-
 # add spu sources
 SRCS        += source/spu/spu.c
 
@@ -22,18 +19,13 @@ SRCS        += source/sd/sd_sub2.c
 SRCS        += source/sd/sd_wk.c
 SRCS        += source/sd/se_tbl.c
 
-CFLAGS      = --std=gnu99 -g -O2 -Wall -Wextra -Wshadow -Isource -Isource/lib
+CFLAGS      = --std=gnu99 -g -O2 -Wall -Wextra -Wshadow -Isource -Isource/lib -I/usr/include/opus
+LDFLAGS     = -lopusenc
 
 all: $(TARGET)
 
 $(TARGET): $(OBJS)
-	$(LINK.c) -o $@ $^
-
-.SUFFIXES: .c
-
-.c.o:
-	@echo compile $<
-	@$(COMPILE.c) $< -o $*.o
+	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
 clean:
 	-$(RM) $(OBJS)
