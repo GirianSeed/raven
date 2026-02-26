@@ -63,14 +63,14 @@ typedef struct reverb_attr
 {
     unsigned short apfd1;
     unsigned short apfd2;
-    unsigned short iir;
-    unsigned short combv1;
-    unsigned short combv2;
-    unsigned short combv3;
-    unsigned short combv4;
-    unsigned short wall;
-    unsigned short apfv1;
-    unsigned short apfv2;
+    short iir;
+    short combv1;
+    short combv2;
+    short combv3;
+    short combv4;
+    short wall;
+    short apfv1;
+    short apfv2;
     unsigned short samem[2];
     unsigned short combm1[2];
     unsigned short combm2[2];
@@ -81,7 +81,7 @@ typedef struct reverb_attr
     unsigned short diffd[2];
     unsigned short apf1[2];
     unsigned short apf2[2];
-    unsigned short in[2];
+    short in[2];
 } reverb_attr;
 
 static short mvol[2]; /* master volume left/right */
@@ -550,25 +550,14 @@ static void tick_voice(voice *v, int *l, int *r)
    update_pitch(v);
 }
 
-static float i16_to_f32(short value)
+static short reverb_read(unsigned int addr)
 {
-    return (float)value / 32767.0f;
+    return reverb_work_area[(raddr + addr) % rsize];
 }
 
-static short f32_to_i16(float value)
+static void reverb_write(unsigned int addr, short value)
 {
-    return CLAMP(value, -1.0f, 1.0f) * 32767.0f;
-}
-
-static float reverb_read(unsigned int addr)
-{
-    short data = reverb_work_area[(raddr + addr) % rsize];
-    return i16_to_f32(data);
-}
-
-static void reverb_write(unsigned int addr, float value)
-{
-    reverb_work_area[(raddr + addr) % rsize] = f32_to_i16(value);
+    reverb_work_area[(raddr + addr) % rsize] = value;
 }
 
 static short reverb_downsample(const short *samples)
@@ -599,12 +588,17 @@ static short reverb_upsample(const short *samples)
 
 static void process_reverb(int l, int r)
 {
-    float in;
-    float same;
-    float diff;
-    float out;
-    float temp;
-    int sample;
+    short sample;
+    short iir_input_a;
+    short iir_input_b;
+    short iir_a;
+    short iir_b;
+    int acc;
+    short fb_a;
+    short fb_b;
+    short mda;
+    short mdb;
+    short ivb;
 
     l = saturate_sample(l);
     reverb_downsample_buffer[0][reverb_filter_index] = l;
@@ -621,62 +615,30 @@ static void process_reverb(int l, int r)
             /* downsample the input to 22.05 kHz */
             sample = reverb_downsample(&reverb_downsample_buffer[i][(reverb_filter_index - 38) & 0x3f]);
 
-            /* apply reverb volume to input */
-            in = i16_to_f32(sample) * i16_to_f32(rattr.in[i]);
+            iir_input_a = saturate_sample((((reverb_read(rattr.samed[i ^ 0] * 4) * rattr.wall) >> 14) + ((sample * rattr.in[i]) >> 14)) >> 1);
+            iir_input_b = saturate_sample((((reverb_read(rattr.diffd[i ^ 1] * 4) * rattr.wall) >> 14) + ((sample * rattr.in[i]) >> 14)) >> 1);
+            iir_a = saturate_sample((((iir_input_a * rattr.iir) >> 14) + (((32768 - rattr.iir) * reverb_read(rattr.samem[i] * 4 - 1)) >> 14)) >> 1);
+            iir_b = saturate_sample((((iir_input_b * rattr.iir) >> 14) + (((32768 - rattr.iir) * reverb_read(rattr.diffm[i] * 4 - 1)) >> 14)) >> 1);
 
-            /* apply same-side reflection */
-            temp = reverb_read(rattr.samed[i] * 4);
-            same = in + temp * i16_to_f32(rattr.wall);
+            reverb_write(rattr.samem[i] * 4, iir_a);
+            reverb_write(rattr.diffm[i] * 4, iir_b);
 
-            temp = reverb_read(rattr.samem[i] * 4 - 1);
-            same = temp + (same - temp) * i16_to_f32(rattr.iir);
+            acc = ((reverb_read(rattr.combm1[i] * 4) * rattr.combv1) >> 14) +
+                  ((reverb_read(rattr.combm2[i] * 4) * rattr.combv2) >> 14) +
+                  ((reverb_read(rattr.combm3[i] * 4) * rattr.combv3) >> 14) +
+                  ((reverb_read(rattr.combm4[i] * 4) * rattr.combv4) >> 14);
 
-            reverb_write(rattr.samem[i] * 4, same);
+            fb_a = reverb_read((rattr.apf1[i] - rattr.apfd1) * 4);
+            fb_b = reverb_read((rattr.apf2[i] - rattr.apfd2) * 4);
+            mda = saturate_sample((acc + ((fb_a * -rattr.apfv1) >> 14)) >> 1);
+            mdb = saturate_sample(fb_a + ((((mda * rattr.apfv1) >> 14) + ((fb_b * -rattr.apfv2) >> 14)) >> 1));
+            ivb = saturate_sample(fb_b + ((mdb * rattr.apfv2) >> 15));
 
-             /* apply opposite-side reflection */
-            temp = reverb_read(rattr.diffd[i ^ 1] * 4);
-            diff = in + temp * i16_to_f32(rattr.wall);
+            reverb_write(rattr.apf1[i] * 4, mda);
+            reverb_write(rattr.apf2[i] * 4, mdb);
 
-            temp = reverb_read(rattr.diffm[i] * 4 - 1);
-            diff = temp + (diff - temp) * i16_to_f32(rattr.iir);
-
-            reverb_write(rattr.diffm[i] * 4, diff);
-
-            /* apply early echo */
-            temp = reverb_read(rattr.combm1[i] * 4);
-            out = temp * i16_to_f32(rattr.combv1);
-
-            temp = reverb_read(rattr.combm2[i] * 4);
-            out += temp * i16_to_f32(rattr.combv2);
-
-            temp = reverb_read(rattr.combm3[i] * 4);
-            out += temp * i16_to_f32(rattr.combv3);
-
-            temp = reverb_read(rattr.combm4[i] * 4);
-            out += temp * i16_to_f32(rattr.combv4);
-
-            /* apply first reverb apf */
-            temp = reverb_read((rattr.apf1[i] - rattr.apfd1) * 4);
-            out -= temp * i16_to_f32(rattr.apfv1);
-
-            reverb_write(rattr.apf1[i] * 4, out);
-
-            out = out * i16_to_f32(rattr.apfv1) + temp;
-
-            /* apply second reverb apf */
-            temp = reverb_read((rattr.apf2[i] - rattr.apfd2) * 4);
-            out -= temp * i16_to_f32(rattr.apfv2);
-
-            reverb_write(rattr.apf2[i] * 4, out);
-
-            out = out * i16_to_f32(rattr.apfv2) + temp;
-
-            /* apply output volume */
-            out *= i16_to_f32(rvol[i]);
-            sample = f32_to_i16(out);
-
-            reverb_upsample_buffer[i][reverb_filter_index >> 1] = sample;
-            reverb_upsample_buffer[i][(reverb_filter_index >> 1) + 32] = sample;
+            reverb_upsample_buffer[i][reverb_filter_index >> 1] = ivb;
+            reverb_upsample_buffer[i][(reverb_filter_index >> 1) + 32] = ivb;
 
             /* upsample the output to 44.1 kHz */
             last_rev[i] = reverb_upsample(&reverb_upsample_buffer[i][((reverb_filter_index >> 1) - 19) & 0x1f]);
@@ -730,8 +692,8 @@ static void tick(short *output)
         process_reverb(wetl, wetr);
     }
 
-    outl = saturate_sample(dryl + last_rev[0]);
-    outr = saturate_sample(dryr + last_rev[1]);
+    outl = saturate_sample(dryl + ((last_rev[0] * rvol[0]) >> 15));
+    outr = saturate_sample(dryr + ((last_rev[1] * rvol[1]) >> 15));
 
     output[output_index++] = apply_volume(outl, mvol[0] << 1);
     output[output_index++] = apply_volume(outr, mvol[1] << 1);
