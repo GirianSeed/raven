@@ -5,6 +5,10 @@ TARGET      = raven
 SRCS        = source/raven.c
 OBJS        = $(SRCS:.c=.o)
 
+# add encoder sources
+SRCS        += source/encoder/flac.c
+SRCS        += source/encoder/opus.c
+
 # add spu sources
 SRCS        += source/spu/spu.c
 
@@ -20,7 +24,7 @@ SRCS        += source/sd/sd_wk.c
 SRCS        += source/sd/se_tbl.c
 
 CFLAGS      = --std=gnu99 -g -O2 -Wall -Wextra -Wshadow -Isource -Isource/lib -I/usr/include/opus
-LDFLAGS     = -lopusenc
+LDFLAGS     = -lFLAC -lopusenc
 
 all: $(TARGET)
 

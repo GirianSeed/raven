@@ -1,3 +1,6 @@
+#include "encoder/flac.h"
+#include "encoder/opus.h"
+
 #include "sd/sd_cli.h"
 #include "spu/spu.h"
 
@@ -5,21 +8,18 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <opusenc.h>
-
 #define STEP_SIZE 240
 
 int main(int argc, char **argv)
 {
-    OggOpusComments *com;
-    OggOpusEnc *enc;
-    int err;
+    ENCODER enc;
     short buffer[STEP_SIZE * 2];
 
     const char *sdx[2] = {NULL, NULL};
 
     int debug = 0;
-    const char *output = "output.ogg";
+    const char *output = NULL;
+    const char *encoder = NULL;
     int loops = 1;
     int song = 1;
     int reverb = 1;
@@ -27,7 +27,7 @@ int main(int argc, char **argv)
 
     if (argc < 2)
     {
-        printf("usage: raven [-d] [-r] [-o output] [-l loops] [-s song] [-p phase] sdx [sdx2]\n");
+        printf("usage: raven [-d] [-r] [-l loops] [-s song] [-p phase] -o output -e encoder sdx [sdx2]\n");
         return 1;
     }
 
@@ -42,13 +42,6 @@ int main(int argc, char **argv)
         if (strcmp(argv[i], "-r") == 0)
         {
             reverb = 0;
-            continue;
-        }
-
-        if (strcmp(argv[i], "-o") == 0)
-        {
-            output = argv[i + 1];
-            i++; // skip value
             continue;
         }
 
@@ -69,6 +62,20 @@ int main(int argc, char **argv)
         if (strcmp(argv[i], "-p") == 0)
         {
             phase = atoi(argv[i + 1]);
+            i++; // skip value
+            continue;
+        }
+
+        if (strcmp(argv[i], "-o") == 0)
+        {
+            output = argv[i + 1];
+            i++; // skip value
+            continue;
+        }
+
+        if (strcmp(argv[i], "-e") == 0)
+        {
+            encoder = argv[i + 1];
             i++; // skip value
             continue;
         }
@@ -94,17 +101,21 @@ int main(int argc, char **argv)
         printf("warning: unknown argument: %s\n", argv[i]);
     }
 
-    if (!sdx[0])
+    if (!output)
     {
-        printf("error: missing required argument sdx\n");
+        printf("error: missing required argument output\n");
         return 1;
     }
 
-    com = ope_comments_create();
-    enc = ope_encoder_create_file(output, com, 48000, 2, 0, &err);
-    if (!enc)
+    if (!encoder)
     {
-        printf("error: opus encoder creation failed! %s\n", ope_strerror(err));
+        printf("error: missing required argument encoder\n");
+        return 1;
+    }
+
+    if (!sdx[0])
+    {
+        printf("error: missing required argument sdx\n");
         return 1;
     }
 
@@ -126,19 +137,29 @@ int main(int argc, char **argv)
         sd_set_cli(0xFF000100 + phase, SD_ASYNC); // phase n
     }
 
+    if (strcmp(encoder, "flac") == 0)
+    {
+        flac_open(&enc, output);
+    }
+    else if (strcmp(encoder, "opus") == 0)
+    {
+        opus_open(&enc, output);
+    }
+    else
+    {
+        printf("error: unknown encoder %s\n", encoder);
+        return 1;
+    }
+
     do
     {
         sd_tick();
         spu_step(STEP_SIZE, buffer);
-
-        ope_encoder_write(enc, buffer, STEP_SIZE);
+        enc.write(&enc, buffer, STEP_SIZE);
     }
     while (sd_sng_play() || sd_se_play());
 
-    ope_encoder_drain(enc);
-    ope_encoder_destroy(enc);
-    ope_comments_destroy(com);
-
+    enc.close(&enc);
     printf("output written to %s\n", output);
 
     sd_term();
