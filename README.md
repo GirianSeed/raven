@@ -9,19 +9,21 @@ This is adapted from [rpsx](https://github.com/KieronJ/rpsx)'s SPU implementatio
 The following sources were referenced to improve rpsx's SPU implementation and fix bugs:
 - nocash's [psx-spx](https://psx-spx.consoledev.net) hardware documentation.
 - [DuckStation](https://github.com/stenzek/duckstation)'s SPU implementation.
-- [Mednafen](https://mednafen.github.io)'s half-band reverb resampling implementation.
+- [Mednafen](https://mednafen.github.io)'s reverb implementation.
 
-This project is still very much a work-in-progress. Expect some songs to sound slightly (or very) incorrect.<br>
-In addition, the reverb algorithm isn't bit-accurate as it uses floats to avoid dealing with rounding behaviour.
+This project is still very much a work-in-progress. Expect some songs to sound slightly (or very) incorrect.
 
-This project only currently supports writing the output to an Opus Ogg file.
+This project supports both FLAC and Opus Ogg output.
+
+## required packages
+`libflac-dev libopusenc-dev`
 
 ## building
 `make`
 
 ## usage
 
-`raven [-d] [-r] [-o output] [-l loops] [-s song] [-p phase] sdx [sdx2]`
+`raven [-d] [-r] [-l loops] [-s song] [-p phase] -o output -e encoder sdx [sdx2]`
 
 Up to two sdx files can be provided.<br>
 Resident sound files in `r_tnk` and `r_plt*` contain common samples used by all songs in their respective stages.<br>
@@ -31,10 +33,11 @@ The following options are supported:
 ```
 -d          Enables debug output.
 -r          Forces reverb off.
--o output   Specifies the name of the output wave file.
 -l loops    Specifies the number of times to loop the song.
 -s song     Specifies which of the songs from the sequence data to play.
 -p phase    Specifies which phase to play for alert/evasion songs.
+-o output   Specifies the name of the output wave file.
+-e encoder  Specifies the encoder to use. ("flac" | "opus")
 ```
 
 ## sol branch
