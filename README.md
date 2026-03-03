@@ -9,19 +9,21 @@ This is adapted from [rpsx](https://github.com/KieronJ/rpsx)'s SPU implementatio
 The following sources were referenced to improve rpsx's SPU implementation and fix bugs:
 - nocash's [psx-spx](https://psx-spx.consoledev.net) hardware documentation.
 - [DuckStation](https://github.com/stenzek/duckstation)'s SPU implementation.
-- [Mednafen](https://mednafen.github.io)'s half-band reverb resampling implementation.
+- [Mednafen](https://mednafen.github.io)'s reverb implementation.
 
-This project is still very much a work-in-progress. Expect some songs to sound slightly (or very) incorrect.<br>
-In addition, the reverb algorithm isn't bit-accurate as it uses floats to avoid dealing with rounding behaviour.
+This project is still very much a work-in-progress. Expect some songs to sound slightly (or very) incorrect.
 
-This project only currently supports writing the output to an Opus Ogg file.
+This project supports both FLAC and Opus Ogg output.
+
+## required packages
+`libflac-dev libopusenc-dev`
 
 ## building
 `make`
 
 ## usage
 
-`raven [-d] [-r] [-o output] [-l loops] [-s song] mdx wvx [wvx2] [wvx3]`
+`raven [-d] [-r] [-l loops] [-s song] -o output -e encoder mdx wvx [wvx2] [wvx3]`
 
 One mdx file and up to three wvx files can be provided:
 - mdx files contain the sequence data for songs.
@@ -34,7 +36,8 @@ The following options are supported:
 ```
 -d          Enables debug output.
 -r          Forces reverb off.
--o output   Specifies the name of the output wave file.
 -l loops    Specifies the number of times to loop the song.
 -s song     Specifies which of the songs from the sequence data to play.
+-o output   Specifies the name of the output wave file.
+-e encoder  Specifies the encoder to use. ("flac" | "opus")
 ```
