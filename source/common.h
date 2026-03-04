@@ -5,4 +5,6 @@
 #define MAX(x, a)       (((x) > (a)) ? (x) : (a))
 #define CLAMP(x, a, b)  (MIN(MAX(x, a), b))
 
+#define STEP_SIZE       448
+
 #endif /* _COMMON_H_ */
