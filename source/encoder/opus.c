@@ -3,6 +3,7 @@
 
 #include <opusenc.h>
 
+#include "common.h"
 #include "opus.h"
 
 static int opus_close(ENCODER *enc)
@@ -46,7 +47,7 @@ int opus_open(ENCODER *enc, const char *filename)
         return 1;
     }
 
-    encoder = ope_encoder_create_file(filename, comments, 44100, 2, 0, &err);
+    encoder = ope_encoder_create_file(filename, comments, SAMPLE_RATE, 2, 0, &err);
     if (encoder == NULL)
     {
         reason = ope_strerror(err);
