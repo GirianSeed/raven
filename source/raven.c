@@ -2,12 +2,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "common.h"
 #include "encoder/flac.h"
 #include "encoder/opus.h"
 #include "sd/sd_cli.h"
 #include "spu/spu.h"
-
-#define STEP_SIZE 240
 
 int main(int argc, char **argv)
 {
