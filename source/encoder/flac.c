@@ -4,6 +4,7 @@
 #include <FLAC/metadata.h>
 #include <FLAC/stream_encoder.h>
 
+#include "common.h"
 #include "flac.h"
 
 static int flac_close(ENCODER *enc)
@@ -67,7 +68,7 @@ int flac_open(ENCODER *enc, const char *filename)
     FLAC__stream_encoder_set_compression_level(encoder, 5);
     FLAC__stream_encoder_set_channels(encoder, 2);
     FLAC__stream_encoder_set_bits_per_sample(encoder, 16);
-    FLAC__stream_encoder_set_sample_rate(encoder, 48000);
+    FLAC__stream_encoder_set_sample_rate(encoder, SAMPLE_RATE);
 
     status = FLAC__stream_encoder_init_file(encoder, filename, NULL, NULL);
     if (status != FLAC__STREAM_ENCODER_INIT_STATUS_OK)
