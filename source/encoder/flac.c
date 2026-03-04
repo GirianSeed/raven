@@ -84,4 +84,3 @@ int flac_open(ENCODER *enc, const char *filename)
     enc->userdata = encoder;
     return 0;
 }
-

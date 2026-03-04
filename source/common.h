@@ -1,8 +1,8 @@
-#ifndef COMMON_H
-#define COMMON_H
+#ifndef _COMMON_H_
+#define _COMMON_H_
 
-#define MIN(x, a)      (((x) < (a)) ? (x) : (a))
-#define MAX(x, a)      (((x) > (a)) ? (x) : (a))
-#define CLAMP(x, a, b) (MIN(MAX(x, a), b))
+#define MIN(x, a)       (((x) < (a)) ? (x) : (a))
+#define MAX(x, a)       (((x) > (a)) ? (x) : (a))
+#define CLAMP(x, a, b)  (MIN(MAX(x, a), b))
 
-#endif /* COMMON_H */
+#endif /* _COMMON_H_ */

@@ -3,9 +3,9 @@
 
 // Do not #include this file externally! Use sd_cli.h instead.
 
-#include "sd/sd_incl.h"
-
 #include <stdio.h>
+
+#include "sd/sd_incl.h"
 
 #define SD_BGM_VOICES  13
 #define SD_SE_VOICES   8
@@ -191,4 +191,4 @@ extern  SPU_TRACK_REG  spu_tr_wk[SD_N_VOICES];
 extern  int            sng_kaihi_fadein_time;
 extern  int            sng_master_vol[SD_BGM_VOICES];
 
-#endif // _SD_EXT_H_
+#endif /* _SD_EXT_H_ */

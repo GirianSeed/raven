@@ -188,4 +188,4 @@ typedef struct SOUND_W
     unsigned short rrd;
 } SOUND_W;
 
-#endif // _SD_INCL_H_
+#endif /* _SD_INCL_H_ */

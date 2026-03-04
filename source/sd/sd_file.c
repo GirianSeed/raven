@@ -1,11 +1,10 @@
-#include "sd/sd_ext.h"
-#include "sd/sd_incl.h"
-
-#include "spu/spu.h"
-
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
+
+#include "sd/sd_ext.h"
+#include "sd/sd_incl.h"
+#include "spu/spu.h"
 
 int sd_sng_data_load(const char *name)
 {

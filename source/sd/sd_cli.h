@@ -20,4 +20,4 @@ int sd_sng_data_load(const char *name);
 int sd_se_data_load(const char *name);
 int sd_wav_data_load(const char *name);
 
-#endif // _SD_CLI_H_
+#endif /* _SD_CLI_H_ */

@@ -1583,4 +1583,4 @@ unsigned char shot_s0200[] = { // guessed name
     0x00,0x00,0xFE,0xFF
 };
 
-#endif // _SE_DATA_BLOB_H_
+#endif /* _SE_DATA_BLOB_H_ */
