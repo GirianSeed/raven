@@ -1,12 +1,11 @@
-#include "sd/sd_ext.h"
-#include "sd/sd_incl.h"
-
-#include "spu/spu.h"
-
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "sd/sd_ext.h"
+#include "sd/sd_incl.h"
+#include "spu/spu.h"
 
 static int sd_sng_data_load(FILE *fp, size_t size)
 {

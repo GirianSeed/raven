@@ -1,18 +1,17 @@
-#include "spu.h"
-
-#include "common.h"
-
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
 
-#define ADPCM_LOOP_END   0x100
-#define ADPCM_LOOP       0x200
-#define ADPCM_LOOP_START 0x400
+#include "common.h"
+#include "spu.h"
 
-#define BLOCK_SIZE       28
-#define PREV_SAMPLES     3
-#define BLOCK_SAMPLES    (BLOCK_SIZE + PREV_SAMPLES)
+#define ADPCM_LOOP_END      0x100
+#define ADPCM_LOOP          0x200
+#define ADPCM_LOOP_START    0x400
+
+#define BLOCK_SIZE          28
+#define PREV_SAMPLES        3
+#define BLOCK_SAMPLES       (BLOCK_SIZE + PREV_SAMPLES)
 
 enum
 {

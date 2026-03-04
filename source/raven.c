@@ -1,12 +1,11 @@
-#include "encoder/flac.h"
-#include "encoder/opus.h"
-
-#include "sd/sd_cli.h"
-#include "spu/spu.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "encoder/flac.h"
+#include "encoder/opus.h"
+#include "sd/sd_cli.h"
+#include "spu/spu.h"
 
 #define STEP_SIZE 240
 

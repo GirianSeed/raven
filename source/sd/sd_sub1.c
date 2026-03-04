@@ -1,7 +1,7 @@
+#include <assert.h>
+
 #include "sd/sd_ext.h"
 #include "sd/sd_incl.h"
-
-#include <assert.h>
 
 static void (*cntl_tbl[128])(void) = {
     /* 0x00 */ no_cmd,

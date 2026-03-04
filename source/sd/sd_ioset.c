@@ -1,6 +1,5 @@
 #include "sd/sd_ext.h"
 #include "sd/sd_incl.h"
-
 #include "spu/spu.h"
 
 static unsigned int pant[41] = {

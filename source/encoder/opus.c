@@ -62,4 +62,3 @@ int opus_open(ENCODER *enc, const char *filename)
     ope_comments_destroy(comments);
     return 0;
 }
-

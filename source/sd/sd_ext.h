@@ -3,9 +3,9 @@
 
 // Do not #include this file externally! Use sd_cli.h instead.
 
-#include "sd/sd_incl.h"
-
 #include <stdio.h>
+
+#include "sd/sd_incl.h"
 
 #define SD_BGM_VOICES 32
 #define SD_SE_VOICES  12
@@ -208,4 +208,4 @@ extern  unsigned int   auto_phase_fg;
 extern  unsigned char  auto_env_pos;
 extern  unsigned char  auto_env_pos2;
 
-#endif // _SD_EXT_H_
+#endif /* _SD_EXT_H_ */

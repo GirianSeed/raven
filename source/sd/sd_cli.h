@@ -18,4 +18,4 @@ void sd_tick(void);
 /* sd_file.c */
 int sd_pack_data_load(const char *name);
 
-#endif // _SD_CLI_H_
+#endif /* _SD_CLI_H_ */

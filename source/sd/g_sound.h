@@ -243,4 +243,4 @@
 #define SE_MENU_TOGGLE          SE_IDEC04
 #define SE_TBL_MAX              (128)
 
-#endif // _G_SOUND_H_
+#endif /* _G_SOUND_H_ */

@@ -222,4 +222,4 @@ typedef struct FADER
     int pan;
 } FADER;
 
-#endif // _SD_INCL_H_
+#endif /* _SD_INCL_H_ */

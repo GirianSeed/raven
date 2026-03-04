@@ -1,9 +1,8 @@
+#include <string.h>
+
 #include "sd/sd_ext.h"
 #include "sd/sd_incl.h"
-
 #include "spu/spu.h"
-
-#include <string.h>
 
 static void sd_init_reverb(int enable)
 {
