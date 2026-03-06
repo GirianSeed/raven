@@ -158,8 +158,8 @@ int sd_pack_data_load(const char *name)
     PACK_H header;
     size_t size;
     size_t rb;
-    size_t bgm_sequence_size;
-    size_t bgm_waveform_size;
+    size_t wvx_size;
+    size_t mdx_size;
 
     fp = fopen(name, "rb");
     if (fp == NULL)
@@ -179,25 +179,25 @@ int sd_pack_data_load(const char *name)
         goto error;
     }
 
-    header.offset_bgm_waveform *= PACK_BLOCK_SIZE;
-    header.offset_sfx_waveform *= PACK_BLOCK_SIZE;
-    header.offset_sfx_sequence *= PACK_BLOCK_SIZE;
-    header.offset_bgm_sequence *= PACK_BLOCK_SIZE;
+    header.wvx1_offset *= PACK_BLOCK_SIZE;
+    header.wvx2_offset *= PACK_BLOCK_SIZE;
+    header.efx_offset *= PACK_BLOCK_SIZE;
+    header.mdx_offset *= PACK_BLOCK_SIZE;
 
-    bgm_sequence_size = size - header.offset_bgm_sequence;
-    bgm_waveform_size = header.offset_sfx_waveform - header.offset_bgm_waveform;
+    wvx_size = header.wvx2_offset - header.wvx1_offset;
+    mdx_size = size - header.mdx_offset;
 
-    fseek(fp, header.offset_bgm_waveform, SEEK_SET);
-    if (sd_wav_data_load(fp, bgm_waveform_size))
+    fseek(fp, header.wvx1_offset, SEEK_SET);
+    if (sd_wav_data_load(fp, wvx_size))
     {
-        SD_WARN("ERROR:unable to read BGM waveform data\n");
+        SD_WARN("ERROR:unable to read WVX\n");
         goto error;
     }
 
-    fseek(fp, header.offset_bgm_sequence, SEEK_SET);
-    if (sd_sng_data_load(fp, bgm_sequence_size))
+    fseek(fp, header.mdx_offset, SEEK_SET);
+    if (sd_sng_data_load(fp, mdx_size))
     {
-        SD_WARN("ERROR:unable to read BGM sequence data\n");
+        SD_WARN("ERROR:unable to read MDX\n");
         goto error;
     }
 

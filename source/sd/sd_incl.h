@@ -3,14 +3,14 @@
 
 typedef struct PACK_H
 {
-    unsigned int   offset_bgm_waveform;
-    char           unused1[4];
-    unsigned int   offset_sfx_waveform;
-    char           unused2[4];
-    unsigned int   offset_sfx_sequence;
-    char           unused3[4];
-    unsigned int   offset_bgm_sequence;
-    char           unused4[4];
+    unsigned int   wvx1_offset;
+    unsigned int   wvx1_id;
+    unsigned int   wvx2_offset; /* unused */
+    unsigned int   wvx2_id;     /* unused */
+    unsigned int   efx_offset;
+    unsigned int   efx_id;
+    unsigned int   mdx_offset;
+    unsigned int   mdx_id;
 } PACK_H;
 
 typedef struct WAVE_H
