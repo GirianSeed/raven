@@ -68,8 +68,8 @@ static int sd_wav_data_load(FILE *fp, size_t size)
     assert((header.offset % sizeof(header)) == 0);
     assert((header.size % sizeof(header)) == 0);
 
-    SD_PRINT("wave data offset = %x\n", header.offset);
-    SD_PRINT("wave data size = %x\n", header.size);
+    SD_PRINT("wave table offset = %x\n", header.offset);
+    SD_PRINT("wave table size = %x\n", header.size);
 
     table = malloc(header.size);
     if (table == NULL)
@@ -127,6 +127,9 @@ static int sd_wav_data_load(FILE *fp, size_t size)
 
     header.offset = read_uint32(&header.offset);
     header.size = read_uint32(&header.size);
+
+    SD_PRINT("wave spu offset = %x\n", header.offset);
+    SD_PRINT("wave spu size = %x\n", header.size);
 
     data = malloc(header.size);
     if (data == NULL)
