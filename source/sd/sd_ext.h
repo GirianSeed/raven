@@ -148,7 +148,11 @@ int sd_se_play(void);
 int sd_set_cli(int sound_code, int sync_mode);
 int sd_sng_code(void);
 
-/* in sd_wk.c */
+/* sd_mstr.c */
+void init_mem_str_w(void);
+int MemSpuTransWithNoLoop(int track);
+
+/* sd_wk.c */
 extern  int            sd_debug_mode;
 extern  int            song_loop_count;
 extern  unsigned int   key_fg;
@@ -168,7 +172,7 @@ extern  int            sng_fout_term;
 extern  int            sng_fade_value[SD_BGM_VOICES];
 extern  int            se_tracks;
 extern  int            sd_sng_code_buf[16];
-extern  int            eons;
+extern  int            eons[2];
 extern  SEPLAYTBL      se_playing[SD_SE_VOICES];
 extern  unsigned int   mdata1;
 extern  unsigned int   mdata2;
@@ -180,20 +184,20 @@ extern  int            stop_jouchuu_se;
 extern  int            se_pan[SD_SE_VOICES];
 extern  unsigned int   mtrack;
 extern  int            se_vol[SD_SE_VOICES];
-extern  int            eoffs;
-extern  unsigned int   keyons;
+extern  int            eoffs[2];
+extern  unsigned int   keyons[2];
 extern  unsigned char *se_exp_table;
 extern  unsigned char *se_data;
 extern  unsigned char *se_exp_data;
 extern  SETBL         *se_header;
 extern  SETBL         *se_exp_header;
-extern  unsigned int   keyoffs;
+extern  unsigned int   keyoffs[2];
 extern  unsigned char  sng_data[0x20000];
-extern  unsigned int   song_end;
-extern  unsigned int   song_loop_end;
+extern  unsigned int   song_end[2];
+extern  unsigned int   song_loop_end[2];
 extern  unsigned int   sng_play_code;
 extern  int            sound_mono_fg;
-extern  unsigned int   keyd;
+extern  unsigned int   keyd[2];
 extern  unsigned char  se_data_area[0x7000];
 extern  unsigned char  se_exp_data_area[0x4800];
 extern  WAVE_W         voice_tbl[512];
@@ -208,5 +212,8 @@ extern  FADER          mix_fader[SD_BGM_VOICES];
 extern  unsigned int   auto_phase_fg;
 extern  unsigned char  auto_env_pos;
 extern  unsigned char  auto_env_pos2;
+extern  MEM_STR_W      mem_str_w[SD_SE_VOICES];
+extern  unsigned char  mem_str_buf[524288];
+extern  int            fg_rev_set[SD_N_VOICES];
 
 #endif /* _SD_EXT_H_ */

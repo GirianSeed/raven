@@ -41,7 +41,8 @@ static inline unsigned int read_uint32(const void *ptr)
 
 static int sd_wav_data_load(FILE *fp, size_t size)
 {
-    WAVE_H header;
+    WAVE_H tbl_header;
+    WAVE_H spu_header;
     int drum_offset;
     unsigned int last_addr;
     unsigned int addr;
@@ -51,22 +52,22 @@ static int sd_wav_data_load(FILE *fp, size_t size)
     (void)size;
 
     /* read wave table header */
-    if (fread(&header, sizeof(header), 1, fp) != 1)
+    if (fread(&tbl_header, sizeof(tbl_header), 1, fp) != 1)
     {
         SD_WARN("ERROR:unable to read wave table header\n");
         return 1;
     }
 
-    header.offset = read_uint32(&header.offset);
-    header.size = read_uint32(&header.size);
+    tbl_header.offset = read_uint32(&tbl_header.offset);
+    tbl_header.size = read_uint32(&tbl_header.size);
 
-    assert((header.offset % sizeof(header)) == 0);
-    assert((header.size % sizeof(header)) == 0);
+    assert((tbl_header.offset % sizeof(tbl_header)) == 0);
+    assert((tbl_header.size % sizeof(tbl_header)) == 0);
 
-    SD_PRINT("wave table offset = %x\n", header.offset);
-    SD_PRINT("wave table size = %x\n", header.size);
+    SD_PRINT("wave table offset = %x\n", tbl_header.offset);
+    SD_PRINT("wave table size = %x\n", tbl_header.size);
 
-    table = malloc(header.size);
+    table = malloc(tbl_header.size);
     if (table == NULL)
     {
         SD_WARN("ERROR:unable to allocate wave table temp\n");
@@ -74,7 +75,7 @@ static int sd_wav_data_load(FILE *fp, size_t size)
     }
 
     /* read wave table */
-    if (fread(table, header.size, 1, fp) != 1)
+    if (fread(table, tbl_header.size, 1, fp) != 1)
     {
         SD_WARN("ERROR:unable to read wave table\n");
         free(table);
@@ -83,7 +84,7 @@ static int sd_wav_data_load(FILE *fp, size_t size)
 
     drum_offset = -1;
     last_addr = 0;
-    for (unsigned int i = 0; i < header.size / sizeof(WAVE_W); i++)
+    for (unsigned int i = 0; i < tbl_header.size / sizeof(WAVE_W); i++)
     {
         addr = table[i].addr;
 
@@ -100,31 +101,31 @@ static int sd_wav_data_load(FILE *fp, size_t size)
     if (drum_offset < 0)
     {
         /* load the entire file to the voice table */
-        memcpy((char *)voice_tbl + header.offset, table, header.size);
+        memcpy((char *)voice_tbl + tbl_header.offset, table, tbl_header.size);
     }
     else
     {
         /* load each section to the correct table */
-        memcpy((char *)voice_tbl + header.offset, table, drum_offset);
-        memcpy(drum_tbl, (char *)table + drum_offset, header.size - drum_offset);
+        memcpy((char *)voice_tbl + tbl_header.offset, table, drum_offset);
+        memcpy(drum_tbl, (char *)table + drum_offset, tbl_header.size - drum_offset);
     }
 
     free(table);
 
     /* read wave data header */
-    if (fread(&header, sizeof(header), 1, fp) != 1)
+    if (fread(&spu_header, sizeof(spu_header), 1, fp) != 1)
     {
         SD_WARN("ERROR:unable to read wave data header\n");
         return 1;
     }
 
-    header.offset = read_uint32(&header.offset);
-    header.size = read_uint32(&header.size);
+    spu_header.offset = read_uint32(&spu_header.offset);
+    spu_header.size = read_uint32(&spu_header.size);
 
-    SD_PRINT("wave spu offset = %x\n", header.offset);
-    SD_PRINT("wave spu size = %x\n", header.size);
+    SD_PRINT("wave spu offset = %x\n", spu_header.offset);
+    SD_PRINT("wave spu size = %x\n", spu_header.size);
 
-    data = malloc(header.size);
+    data = malloc(spu_header.size);
     if (data == NULL)
     {
         SD_WARN("ERROR:unable to allocate wave data temp\n");
@@ -132,14 +133,23 @@ static int sd_wav_data_load(FILE *fp, size_t size)
     }
 
     /* read wave data */
-    if (fread(data, header.size, 1, fp) != 1)
+    if (fread(data, spu_header.size, 1, fp) != 1)
     {
         SD_WARN("ERROR:unable to read wave data\n");
         free(data);
         return 1;
     }
 
-    spu_write(header.offset, data, header.size);
+    /* entries 0-255 are SPU samples, entries 256-511 are streamed samples */
+    if (tbl_header.offset < 0x1000)
+    {
+        spu_write(spu_header.offset + 0x20000, data, spu_header.size);
+    }
+    else
+    {
+        SD_PRINT("copying data to memory streaming buffer\n");
+        memcpy(mem_str_buf + spu_header.offset, data, spu_header.size);
+    }
 
     free(data);
     return 0;
@@ -200,7 +210,8 @@ int sd_pack_data_load(const char *name)
     FILE *fp;
     PACK_H header;
     size_t size;
-    size_t wvx_size;
+    size_t wvx1_size;
+    size_t wvx2_size;
     size_t efx_size;
     size_t mdx_size;
 
@@ -226,14 +237,22 @@ int sd_pack_data_load(const char *name)
     header.efx_offset *= PACK_BLOCK_SIZE;
     header.mdx_offset *= PACK_BLOCK_SIZE;
 
-    wvx_size = header.wvx2_offset - header.wvx1_offset;
+    wvx1_size = header.wvx2_offset - header.wvx1_offset;
+    wvx2_size = header.efx_offset - header.wvx2_offset;
     efx_size = header.mdx_offset - header.efx_offset;
     mdx_size = size - header.mdx_offset;
 
     fseek(fp, header.wvx1_offset, SEEK_SET);
-    if (sd_wav_data_load(fp, wvx_size))
+    if (sd_wav_data_load(fp, wvx1_size))
     {
-        SD_WARN("ERROR:unable to read WVX\n");
+        SD_WARN("ERROR:unable to read WVX1\n");
+        goto error;
+    }
+
+    fseek(fp, header.wvx2_offset, SEEK_SET);
+    if (sd_wav_data_load(fp, wvx2_size))
+    {
+        SD_WARN("ERROR:unable to read WVX2\n");
         goto error;
     }
 

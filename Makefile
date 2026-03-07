@@ -18,6 +18,7 @@ SRCS        += source/sd/sd_drv.c
 SRCS        += source/sd/sd_file.c
 SRCS        += source/sd/sd_ioset.c
 SRCS        += source/sd/sd_main.c
+SRCS        += source/sd/sd_mstr.c
 SRCS        += source/sd/sd_sub1.c
 SRCS        += source/sd/sd_sub2.c
 SRCS        += source/sd/sd_wk.c

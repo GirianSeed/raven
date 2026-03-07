@@ -5,8 +5,8 @@ typedef struct PACK_H
 {
     unsigned int   wvx1_offset;
     unsigned int   wvx1_id;
-    unsigned int   wvx2_offset; /* unused */
-    unsigned int   wvx2_id;     /* unused */
+    unsigned int   wvx2_offset;
+    unsigned int   wvx2_id;
     unsigned int   efx_offset;
     unsigned int   efx_id;
     unsigned int   mdx_offset;
@@ -189,14 +189,6 @@ typedef struct SOUND_W
     /* reset release decay */
     unsigned short rrd;
 
-    /* effect */
-    unsigned int   fxs;
-    unsigned char  fxt;
-    unsigned char  fxc;
-    unsigned char *fx_addr;
-    unsigned char  fxe;
-    unsigned char  fxo;
-
     /* automation */
     unsigned int   atp;
     unsigned char  atm;
@@ -206,10 +198,20 @@ typedef struct SOUND_W
 
 typedef struct FADER
 {
-    int step;
-    int vol;
-    int target;
-    int pan;
+    int            step;
+    int            vol;
+    int            target;
+    int            pan;
 } FADER;
+
+typedef struct MEM_STR_W
+{
+    int            state;
+    int            total;
+    int            remaining;
+    int            note;
+    unsigned char *addr;
+    int            buffer;
+} MEM_STR_W;
 
 #endif /* _SD_INCL_H_ */

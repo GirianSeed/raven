@@ -152,7 +152,7 @@ void lp1_start(void)
 
 void lp1_end(void)
 {
-    if (mtrack < 32)
+    if (mtrack < SD_BGM_VOICES)
     {
         /* if (skip_intro_loop && mdata2 == 0) */
         if (mdata2 == 0)
@@ -213,7 +213,8 @@ void l3s_set(void)
 
 void l3e_set(void)
 {
-    song_loop_end |= keyd;
+    song_loop_end[0] |= keyd[0];
+    song_loop_end[1] |= keyd[1];
 
     if (sptr->lp3_addr)
     {
@@ -360,7 +361,12 @@ void eon_set(void)
 {
     if (mtrack < SD_BGM_VOICES)
     {
-        eons |= keyd;
+        eons[0] |= keyd[0];
+        eons[1] |= keyd[1];
+    }
+    else if (se_playing[mtrack - 32].kind == 0 || fg_rev_set[mtrack])
+    {
+        eons[1] |= keyd[1];
     }
 }
 
@@ -368,7 +374,12 @@ void eof_set(void)
 {
     if (mtrack < SD_BGM_VOICES)
     {
-        eoffs |= keyd;
+        eoffs[0] |= keyd[0];
+        eoffs[1] |= keyd[1];
+    }
+    else if (se_playing[mtrack - 32].kind == 0 || fg_rev_set[mtrack])
+    {
+        eoffs[1] |= keyd[1];
     }
 }
 
@@ -482,31 +493,23 @@ void jump_set(void)
 
 void block_end(void)
 {
-    keyoffs |= keyd;
+    keyoffs[0] |= keyd[0];
+    keyoffs[1] |= keyd[1];
 }
 
 void fxs_set(void)
 {
     SD_WARN("track %u: unimplemented fxs_set %x %x\n", mtrack, mdata2 & 0xFF, mdata3);
-
-    sptr->fxt = mdata2;
-    sptr->fxs = mdata3;
-    sptr->fx_addr = mptr;
 }
 
 void fxe_set(void)
 {
     SD_WARN("track %u: unimplemented fxe_set\n", mtrack);
-
-    /* TODO */
-
-    // mptr = sptr->fx_addr;
-    // sptr->fxe = 0;
 }
 
 void xon_set(void)
 {
-    sptr->fxo = 1;
+    SD_WARN("track %u: unimplemented xon_set\n", mtrack);
 }
 
 void vol_i_move(void)
@@ -779,14 +782,27 @@ void at8_set(void)
 
 void mno_set(void)
 {
-    // This command is useless as sfx and vox have been stripped out.
-    SD_WARN("track %u: unimplemented mno_set\n", mtrack);
+    if (mtrack >= SD_BGM_VOICES)
+    {
+        sptr->snos = mdata2 + 256;
+        mem_str_w[mtrack - 32].note = sptr->snos;
+
+        keyoff();
+        tone_set(sptr->snos);
+    }
 }
 
 void flg_set(void)
 {
-    // This command is useless as sfx and vox have been stripped out.
-    SD_WARN("track %u: unimplemented flg_set\n", mtrack);
+    switch (mdata2)
+    {
+    case 0:
+        // fg_syukan_off[mtrack] = mdata3;
+        break;
+    case 1:
+        fg_rev_set[mtrack] = mdata3;
+        break;
+    }
 }
 
 void no_cmd(void)

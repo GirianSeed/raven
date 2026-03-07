@@ -6,25 +6,35 @@
 
 static void sd_init_reverb(int enable)
 {
-    spu_set_reverb_enable(0);
+    spu_set_reverb_enable(0, 0);
+    spu_set_reverb_enable(1, 0);
+
     spu_reverb_clear();
-    spu_set_reverb_mode(SPU_REV_MODE_HALL);
-    spu_set_reverb_depth(0x2000, 0x2000);
+    spu_set_reverb_mode(0, SPU_REV_MODE_HALL);
+    spu_set_reverb_mode(1, SPU_REV_MODE_HALL);
+    spu_set_reverb_depth(0, 0x2000, 0x2000);
+    spu_set_reverb_depth(1, 0x2000, 0x2000);
 
     if (enable)
     {
-        spu_set_reverb_enable(1);
+        spu_set_reverb_enable(0, 1);
+        spu_set_reverb_enable(1, 1);
     }
 
-    spu_set_reverb_on(SD_BGM_MASK);
+    spu_set_reverb_on(0, 0xffffff);
+    spu_set_reverb_on(1, 0x3fffff);
 
-    eoffs = 0;
-    eons = SD_BGM_MASK;
+    eoffs[0] = 0;
+    eoffs[1] = 0;
+
+    eons[0] = 0xffffff;
+    eons[1] = 0x3fffff;
 }
 
 static void sd_init_volume(void)
 {
-    spu_set_master_volume(0x3fff, 0x3fff);
+    spu_set_master_volume(0, 0x3fff, 0x3fff);
+    spu_set_master_volume(1, 0x3fff, 0x3fff);
 }
 
 static void sd_mem_alloc(void)
@@ -57,12 +67,12 @@ void sd_init(int debug, int loops, int reverb)
 
     init_sng_work();
 
-    for (int i = 0; i < 8; i++)
+    for (int i = 0; i < SD_SE_VOICES; i++)
     {
         se_playing[i].code = 0;
     }
 
-    for(int i = 0; i < 16; i++)
+    for(int i = 0; i < SD_BGM_VOICES/2; i++)
     {
         mix_fader[i].step = 0;
         mix_fader[i].vol = 0xFFFF;
@@ -70,7 +80,7 @@ void sd_init(int debug, int loops, int reverb)
         mix_fader[i].pan = 32;
     }
 
-    for(int i = 16; i < 32; i++)
+    for(int i = SD_BGM_VOICES/2; i < SD_BGM_VOICES; i++)
     {
         mix_fader[i].step = 0;
         mix_fader[i].vol = 0;
@@ -81,7 +91,8 @@ void sd_init(int debug, int loops, int reverb)
 
 void sd_term(void)
 {
-    spu_set_key_off(0xffffffff);
+    spu_set_key_off(0, 0xffffff);
+    spu_set_key_off(1, 0x3fffff);
     spu_quit();
 
     SD_PRINT("SD:TERM\n");

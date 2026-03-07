@@ -9,14 +9,29 @@ int sd_sng_play(void)
 
 int sd_se_play(void)
 {
-    return 0;
+    return (song_end[1] >> 8) != 0xfff;
 }
 
 static int SePlay(unsigned int sound_code)
 {
     SEPLAYTBL se;
+    int       bits;
+    int       exp_code = -1;
     int       index;
     int       pri;
+
+    bits = song_end[1] >> 8;
+    for (int i = 0; i < SD_SE_VOICES; i++)
+    {
+        if (bits & 1)
+        {
+            se_playing[i].code = 0;
+            se_playing[i].pri = 0;
+            se_playing[i].character = 0;
+        }
+
+        bits >>= 1;
+    }
 
     se.code = sound_code;
     sound_code &= 0x7FF;
@@ -28,10 +43,15 @@ static int SePlay(unsigned int sound_code)
     }
     else
     {
-        /* TODO: remap */
+        exp_code = se_exp_table[sound_code - 256];
+        if (exp_code == 0xff)
+        {
+            SD_WARN("ERR:se_exp_table offset(%x)\n", sound_code);
+            return -1;
+        }
 
-        se_tracks = se_exp_header[sound_code - 256].tracks;
-        se.character = se_exp_header[sound_code - 256].character;
+        se_tracks = se_exp_header[exp_code].tracks;
+        se.character = se_exp_header[exp_code].character;
     }
 
     for (int track = 0; track < se_tracks; track++)
@@ -44,15 +64,15 @@ static int SePlay(unsigned int sound_code)
         }
         else
         {
-            se.pri = se_exp_header[sound_code - 256].pri;
-            se.kind = se_exp_header[sound_code - 256].kind;
-            se.addr = se_exp_data + se_exp_header[sound_code - 256].addr[track];
+            se.pri = se_exp_header[exp_code].pri;
+            se.kind = se_exp_header[exp_code].kind;
+            se.addr = se_exp_data + se_exp_header[exp_code].addr[track];
         }
 
         index = -1;
         pri = 256;
 
-        for (int i = 0; i < 12; i++)
+        for (int i = 0; i < SD_SE_VOICES; i++)
         {
             if (((se_playing[i].code & 0xFF) == sound_code) && !se_request[i].code)
             {
@@ -85,7 +105,7 @@ static int SePlay(unsigned int sound_code)
 
         if (index < 0)
         {
-            for (int i = 0; i < 12; i++)
+            for (int i = 0; i < SD_SE_VOICES; i++)
             {
                 if ((se_playing[i].code != 0) || (se_request[i].code != 0))
                 {
@@ -99,7 +119,7 @@ static int SePlay(unsigned int sound_code)
 
             if (index < 0)
             {
-                for (int i = 0; i < 12; i++)
+                for (int i = 0; i < SD_SE_VOICES; i++)
                 {
                     if (se_request[i].code == 0 && se_playing[i].pri <= pri)
                     {
@@ -150,7 +170,6 @@ static void set_sng_code_buf(unsigned int code)
     SD_WARN("***TooMuchBGMSoundCode(%x)***\n", code);
 }
 
-
 static void sd_set(unsigned int sound_code)
 {
     unsigned int mode;
@@ -160,7 +179,7 @@ static void sd_set(unsigned int sound_code)
     mode = sound_code & 0xFF000000;
     if (mode == 0)
     {
-        if (sound_code & 0xFF)
+        if (sound_code & 0x7FF)
         {
             SePlay(sound_code);
         }

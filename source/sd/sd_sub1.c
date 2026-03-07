@@ -195,9 +195,16 @@ int sound_sub(void)
 
     fader_automation2();
 
-    if (key_fg && sptr->snos < 0x100)
+    if (key_fg)
     {
-        keyon();
+        if (sptr->snos >= 256)
+        {
+            mem_str_w[mtrack - 32].state = 2;
+        }
+        else
+        {
+            keyon();
+        }
     }
 
     return 0;

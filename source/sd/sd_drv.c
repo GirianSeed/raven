@@ -180,7 +180,7 @@ void IntSdMain(void)
             sng_adrs_set(sng_play_code);
             SngFadeWkSet();
 
-            for(int i = 0; i < 32; i++)
+            for(int i = 0; i < SD_BGM_VOICES; i++)
             {
                 mix_fader[i].step = 0;
                 mix_fader[i].vol = 0xFFFF;
@@ -196,46 +196,68 @@ void IntSdMain(void)
 
             for (mtrack = 0; mtrack < SD_BGM_VOICES; mtrack++)
             {
-                keyd = 1u << mtrack;
-
-                if ((song_end & keyd) == 0)
+                if (mtrack >= 24)
                 {
-                    sptr = &sound_w[mtrack];
+                    keyd[0] = 0;
+                    keyd[1] = 1 << (mtrack - 24);
 
-                    if (!sptr->mpointer)
+                    if (song_end[1] & keyd[1])
                     {
-                        song_end |= keyd;
-                        song_loop_end |= keyd;
+                        continue;
+                    }
+                }
+                else
+                {
+                    keyd[0] = 1 << mtrack;
+                    keyd[1] = 0;
+
+                    if (song_end[0] & keyd[0])
+                    {
+                        continue;
+                    }
+                }
+
+                sptr = &sound_w[mtrack];
+
+                if (!sptr->mpointer)
+                {
+                    song_end[0] |= keyd[0];
+                    song_end[1] |= keyd[1];
+                    song_loop_end[0] |= keyd[0];
+                    song_loop_end[1] |= keyd[1];
+                }
+                else
+                {
+                    mptr = sptr->mpointer;
+
+                    if (sound_sub())
+                    {
+                        song_end[0] |= keyd[0];
+                        song_end[1] |= keyd[1];
+                        song_loop_end[0] |= keyd[0];
+                        song_loop_end[1] |= keyd[1];
+                        sptr->mpointer = 0;
                     }
                     else
                     {
-                        mptr = sptr->mpointer;
-
-                        if (sound_sub())
-                        {
-                            song_end |= keyd;
-                            song_loop_end |= keyd;
-                            sptr->mpointer = 0;
-                        }
-                        else
-                        {
-                            sptr->mpointer = mptr;
-                        }
+                        sptr->mpointer = mptr;
                     }
                 }
             }
 
-            if ((song_loop_end & SD_BGM_MASK) == SD_BGM_MASK)
+            if ((song_loop_end[0] == 0xffffff) && ((song_loop_end[1] & 0xff) == 0xff))
             {
-                song_loop_end = song_end;
+                song_loop_end[0] = song_end[0];
+                song_loop_end[1] = song_end[1] & 0xff;
 
                 if (--song_loop_count < 0)
                 {
-                    song_end = SD_BGM_MASK;
+                    song_end[0] = 0xffffff;
+                    song_end[1] |= 0xff;
                 }
             }
 
-            if ((song_end & SD_BGM_MASK) == SD_BGM_MASK)
+            if ((song_end[0] == 0xffffff) && ((song_end[1] & 0xff) == 0xff))
             {
                 sng_status = 4;
             }
@@ -254,9 +276,58 @@ void IntSdMain(void)
 
     }
 
+    for (mtrack = SD_BGM_VOICES; mtrack < SD_N_VOICES; ++mtrack)
+    {
+        if (se_tracks < 2 && se_request[mtrack - 32].code != 0)
+        {
+            se_off(mtrack - 32);
+            se_adrs_set(mtrack - 32);
+        }
+        else
+        {
+            keyd[0] = 0;
+            keyd[1] = 1 << (mtrack - 24);
+
+            if ((song_end[1] & (1 << (mtrack - 24))) == 0)
+            {
+                sptr = &sound_w[mtrack];
+
+                if (sptr->mpointer)
+                {
+                    mptr = sptr->mpointer;
+
+                    if (sound_sub())
+                    {
+                        song_end[1] |= keyd[1];
+                        sptr->mpointer = NULL;
+                    }
+                    else
+                    {
+                        sptr->mpointer = mptr;
+                    }
+                }
+                else
+                {
+                    song_end[1] |= keyd[1];
+                }
+            }
+        }
+    }
+
     if (stop_jouchuu_se >= 2)
     {
         stop_jouchuu_se = 0;
+    }
+
+    for (mtrack = 32; mtrack < 44; mtrack++)
+    {
+        keyd[0] = 0;
+        keyd[1] = 1 << (mtrack - 24);
+
+        if (MemSpuTransWithNoLoop(mtrack))
+        {
+            break;
+        }
     }
 
     spuwr();
@@ -372,13 +443,13 @@ int SngKaihiP(void)
 {
     if (sng_kaihi_fg)
     {
-        for (int i = 0; i < 16; i++)
+        for (int i = 0; i < SD_BGM_VOICES/2; i++)
         {
             mix_fader[i].target = 0xffff;
             mix_fader[i].step = (mix_fader[i].target - mix_fader[i].vol) / 100;
         }
 
-        for (int i = 16; i < 32; i++)
+        for (int i = SD_BGM_VOICES/2; i < SD_BGM_VOICES; i++)
         {
             mix_fader[i].target = 0;
             mix_fader[i].step = (mix_fader[i].target - mix_fader[i].vol) / 400;
@@ -388,13 +459,13 @@ int SngKaihiP(void)
     }
     else
     {
-        for (int i = 0; i < 16; i++)
+        for (int i = 0; i < SD_BGM_VOICES/2; i++)
         {
             mix_fader[i].target = 0;
             mix_fader[i].step = (mix_fader[i].target - mix_fader[i].vol) / 1200;
         }
 
-        for (int i = 16; i < 32; i++)
+        for (int i = SD_BGM_VOICES/2; i < SD_BGM_VOICES; i++)
         {
             mix_fader[i].target = 0xffff;
             mix_fader[i].step = (mix_fader[i].target - mix_fader[i].vol) / 1000;
@@ -635,10 +706,14 @@ void init_sng_work(void)
         track->lp2_addr = 0;
         track->lp1_addr = 0;
         sng_track_init(track);
+
+        fg_rev_set[mtrack] = 0;
     }
 
-    keyons = 0;
-    keyoffs = 0;
+    keyons[0] = 0;
+    keyons[1] = 0;
+    keyoffs[0] = 0;
+    keyoffs[1] = 0;
     sng_play_code = 0;
 }
 
@@ -651,8 +726,11 @@ void sng_adrs_set(int num)
     song_addr += sng_data[(num & 0xF) * 4 + 1] << 8;
     song_addr += sng_data[(num & 0xF) * 4];
 
-    song_end = 0;
-    song_loop_end &= 0;
+    song_end[0] = 0;
+    song_end[1] &= 0xffff00;
+
+    song_loop_end[0] = 0;
+    song_loop_end[1] &= 0xffff00;
 
     for (int i = 0; i < SD_BGM_VOICES; i++)
     {
@@ -665,14 +743,20 @@ void sng_adrs_set(int num)
             sound_w[i].mpointer = &sng_data[track_addr];
             sng_track_init(&sound_w[i]);
         }
+        else if (i >= 24)
+        {
+            song_end[1] |= 1 << (i - 24);
+            song_loop_end[1] |= 1 << (i - 24);
+        }
         else
         {
-            song_end |= 1 << i;
-            song_loop_end |= 1 << i;
+            song_end[0] |= 1 << i;
+            song_loop_end[0] |= 1 << i;
         }
     }
 
-    keyons = 0;
+    keyons[0] = 0;
+    keyons[1] &= 0xffff00;
 }
 
 void se_adrs_set(int num)
@@ -693,6 +777,23 @@ void se_adrs_set(int num)
     se_pan[num] = (se_playing[num].code & 0xfc0000) >> 18;
 
     sound_w[num + SD_SE_START].mpointer = se_playing[num].addr;
+
+    song_end[1] &= ~(1 << (num + 8));
+
+    keyons[1] &= ~(1 << (num + 8));
+    keyoffs[1] &= ~(1 << (num + 8));
+
+    if (se_playing[num].kind != 0)
+    {
+        if (se_rev_on)
+        {
+            eons[1] |= 1 << (num + 8);
+        }
+        else
+        {
+            eoffs[1] |= 1 << (num + 8);
+        }
+    }
 }
 
 void sng_track_init(SOUND_W *track)
@@ -727,10 +828,6 @@ void sng_track_init(SOUND_W *track)
     track->tund     = 0;
     track->tmp      = 255;
     track->tmpc     = 0;
-    track->fxs      = 0;
-    track->fxc      = 1;
-    track->fxe      = 0;
-    track->fxo      = 0;
     track->atp      = 0xFFFFFFFF;
     track->atm      = 0;
     track->atv[0]   = 0;

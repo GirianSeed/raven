@@ -42,29 +42,57 @@ static unsigned int freq_tbl[108] = {
 
 void spuwr(void)
 {
-    if (keyoffs)
+    if (keyoffs[0])
     {
-        spu_set_key_off(keyoffs);
-        keyoffs = 0;
+        spu_set_key_off(0, keyoffs[0]);
+        keyoffs[0] = 0;
     }
 
-    if (eoffs)
+    if (keyoffs[1])
     {
-        spu_set_reverb_off(eoffs);
-        eoffs = 0;
+        spu_set_key_off(1, keyoffs[1]);
+        keyoffs[1] = 0;
     }
 
-    for (int i = 0; i < SD_BGM_VOICES; i++)
+    if (eoffs[0])
+    {
+        spu_set_reverb_off(0, eoffs[0]);
+        eoffs[0] = 0;
+    }
+
+    if (eoffs[1])
+    {
+        spu_set_reverb_off(1, eoffs[1]);
+        eoffs[1] = 0;
+    }
+
+    for (int i = 0; i < SD_N_VOICES; i++)
     {
         if (spu_tr_wk[i].vol_fg)
         {
-            spu_set_voice_volume(i, spu_tr_wk[i].vol_l, spu_tr_wk[i].vol_r);
+            if (i >= 24)
+            {
+                spu_set_voice_volume(1, i - 24, spu_tr_wk[i].vol_l, spu_tr_wk[i].vol_r);
+            }
+            else
+            {
+                spu_set_voice_volume(0, i, spu_tr_wk[i].vol_l, spu_tr_wk[i].vol_r);
+            }
+
             spu_tr_wk[i].vol_fg = 0;
         }
 
         if (spu_tr_wk[i].pitch_fg)
         {
-            spu_set_voice_pitch(i, spu_tr_wk[i].pitch);
+            if (i >= 24)
+            {
+                spu_set_voice_pitch(1, i - 24, spu_tr_wk[i].pitch);
+            }
+            else
+            {
+                spu_set_voice_pitch(0, i, spu_tr_wk[i].pitch);
+            }
+
             spu_tr_wk[i].pitch_fg = 0;
         }
 
@@ -72,58 +100,113 @@ void spuwr(void)
         {
             if (spu_tr_wk[i].addr == 0xFFFFFFFF)
             {
-                keyons &= ~(1 << i);
-                keyoffs |= 1 << i;
+                if (i >= 24)
+                {
+                    keyons[1] &= ~(1 << (i - 24));
+                    keyoffs[1] |= 1 << (i - 24);
+                }
+                else
+                {
+                    keyons[0] &= ~(1 << i);
+                    keyoffs[0] |= 1 << i;
+                }
+
                 continue;
             }
 
-            spu_set_voice_address(i, spu_tr_wk[i].addr);
+            if (i >= 24)
+            {
+                spu_set_voice_address(1, i - 24, spu_tr_wk[i].addr + 0x20000);
+            }
+            else
+            {
+                spu_set_voice_address(0, i, spu_tr_wk[i].addr + 0x20000);
+            }
+
             spu_tr_wk[i].addr_fg = 0;
         }
 
         if (spu_tr_wk[i].env1_fg)
         {
-            spu_set_voice_attack(i, spu_tr_wk[i].a_mode, spu_tr_wk[i].ar);
-            spu_set_voice_decay(i, spu_tr_wk[i].dr);
+            if (i >= 24)
+            {
+                spu_set_voice_attack(1, i - 24, spu_tr_wk[i].a_mode, spu_tr_wk[i].ar);
+                spu_set_voice_decay(1, i - 24, spu_tr_wk[i].dr);
+            }
+            else
+            {
+                spu_set_voice_attack(0, i, spu_tr_wk[i].a_mode, spu_tr_wk[i].ar);
+                spu_set_voice_decay(0, i, spu_tr_wk[i].dr);
+            }
+
             spu_tr_wk[i].env1_fg = 0;
         }
 
         if (spu_tr_wk[i].env2_fg)
         {
-            spu_set_voice_sustain(i, spu_tr_wk[i].s_mode, spu_tr_wk[i].sr, spu_tr_wk[i].sl);
+            if (i >= 24)
+            {
+                spu_set_voice_sustain(1, i - 24, spu_tr_wk[i].s_mode, spu_tr_wk[i].sr, spu_tr_wk[i].sl);
+            }
+            else
+            {
+                spu_set_voice_sustain(0, i, spu_tr_wk[i].s_mode, spu_tr_wk[i].sr, spu_tr_wk[i].sl);
+            }
+
             spu_tr_wk[i].env2_fg = 0;
         }
 
         if (spu_tr_wk[i].env3_fg)
         {
-            spu_set_voice_release(i, spu_tr_wk[i].r_mode, spu_tr_wk[i].rr);
+            if (i >= 24)
+            {
+                spu_set_voice_release(1, i - 24, spu_tr_wk[i].r_mode, spu_tr_wk[i].rr);
+            }
+            else
+            {
+                spu_set_voice_release(0, i, spu_tr_wk[i].r_mode, spu_tr_wk[i].rr);
+            }
+
             spu_tr_wk[i].env3_fg = 0;
         }
     }
 
-    if (eons)
+    if (eons[0])
     {
-        spu_set_reverb_on(eons);
-        eons = 0;
+        spu_set_reverb_on(0, eons[0]);
+        eons[0] = 0;
     }
 
-    if (keyons)
+    if (eons[1])
     {
-        spu_set_key_on(keyons);
-        keyons = 0;
+        spu_set_reverb_on(1, eons[1]);
+        eons[1] = 0;
+    }
+
+    if (keyons[0])
+    {
+        spu_set_key_on(0, keyons[0]);
+        keyons[0] = 0;
+    }
+
+    if (keyons[1])
+    {
+        spu_set_key_on(1, keyons[1]);
+        keyons[1] = 0;
     }
 }
 
 void sound_off(void)
 {
-    for (int i = 0; i < SD_BGM_VOICES; i++)
+    for (int i = 0; i < SD_N_VOICES; i++)
     {
         spu_tr_wk[i].r_mode = SPU_ADSR_LIN_DEC;
         spu_tr_wk[i].rr = 7;
         spu_tr_wk[i].env3_fg = 1;
     }
 
-    keyoffs = 0xFFFFFFFF;
+    keyoffs[0] = 0xffffff;
+    keyoffs[1] = 0x3fffff;
     spuwr();
 }
 
@@ -136,9 +219,12 @@ void sng_off(void)
         spu_tr_wk[i].env3_fg = 1;
     }
 
-    song_end |= SD_BGM_MASK;
-    song_loop_end |= SD_BGM_MASK;
-    keyoffs |= SD_BGM_MASK;
+    song_end[0] |= 0xffffff;
+    song_end[1] |= 0xff;
+    song_loop_end[0] |= 0xffffff;
+    song_loop_end[1] |= 0xff;
+    keyoffs[0] |= 0xffffff;
+    keyoffs[1] |= 0xff;
 }
 
 void se_off(int i)
@@ -146,26 +232,35 @@ void se_off(int i)
     spu_tr_wk[i + SD_SE_START].r_mode = SPU_ADSR_LIN_DEC;
     spu_tr_wk[i + SD_SE_START].rr = 0;
     spu_tr_wk[i + SD_SE_START].env3_fg = 1;
+
+    song_end[1] |= 1 << (i + 8);
+    keyoffs[1] |= 1 << (i + 8);
+
+    sound_w[i + 32].mpointer = NULL;
 }
 
 void sng_pause(void)
 {
-    spu_set_master_volume(0, 0);
+    spu_set_master_volume(0, 0, 0);
+    spu_set_master_volume(1, 0, 0);
 }
 
 void sng_pause_off(void)
 {
-    spu_set_master_volume(0x3fff, 0x3fff);
+    spu_set_master_volume(0, 0x3fff, 0x3fff);
+    spu_set_master_volume(1, 0x3fff, 0x3fff);
 }
 
 void keyon(void)
 {
-    keyons |= keyd;
+    keyons[0] |= keyd[0];
+    keyons[1] |= keyd[1];
 }
 
 void keyoff(void)
 {
-    keyoffs |= keyd;
+    keyoffs[0] |= keyd[0];
+    keyoffs[1] |= keyd[1];
 }
 
 void tone_set(unsigned int num)
