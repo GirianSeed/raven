@@ -9,16 +9,13 @@
 
 static int sd_sng_data_load(FILE *fp, size_t size)
 {
-    size_t rb;
-
     if (size > sizeof(sng_data))
     {
         SD_WARN("ERROR:song data size exceeds max %zx\n", size);
         return 1;
     }
 
-    rb = fread(sng_data, size, 1, fp);
-    if (rb != 1)
+    if (fread(sng_data, size, 1, fp) != 1)
     {
         SD_WARN("ERROR:unable to read song data\n");
         return 1;
@@ -45,7 +42,6 @@ static inline unsigned int read_uint32(const void *ptr)
 static int sd_wav_data_load(FILE *fp, size_t size)
 {
     WAVE_H header;
-    size_t rb;
     int drum_offset;
     unsigned int last_addr;
     unsigned int addr;
@@ -55,8 +51,7 @@ static int sd_wav_data_load(FILE *fp, size_t size)
     (void)size;
 
     /* read wave table header */
-    rb = fread(&header, sizeof(header), 1, fp);
-    if (rb != 1)
+    if (fread(&header, sizeof(header), 1, fp) != 1)
     {
         SD_WARN("ERROR:unable to read wave table header\n");
         return 1;
@@ -79,8 +74,7 @@ static int sd_wav_data_load(FILE *fp, size_t size)
     }
 
     /* read wave table */
-    rb = fread(table, header.size, 1, fp);
-    if (rb != 1)
+    if (fread(table, header.size, 1, fp) != 1)
     {
         SD_WARN("ERROR:unable to read wave table\n");
         free(table);
@@ -118,8 +112,7 @@ static int sd_wav_data_load(FILE *fp, size_t size)
     free(table);
 
     /* read wave data header */
-    rb = fread(&header, sizeof(header), 1, fp);
-    if (rb != 1)
+    if (fread(&header, sizeof(header), 1, fp) != 1)
     {
         SD_WARN("ERROR:unable to read wave data header\n");
         return 1;
@@ -139,8 +132,7 @@ static int sd_wav_data_load(FILE *fp, size_t size)
     }
 
     /* read wave data */
-    rb = fread(data, header.size, 1, fp);
-    if (rb != 1)
+    if (fread(data, header.size, 1, fp) != 1)
     {
         SD_WARN("ERROR:unable to read wave data\n");
         free(data);
@@ -153,6 +145,54 @@ static int sd_wav_data_load(FILE *fp, size_t size)
     return 0;
 }
 
+static int sd_efx_data_load(FILE *fp, size_t size)
+{
+    unsigned char table[2048];
+
+    if (fread(table, sizeof(table), 1, fp) != 1)
+    {
+        SD_WARN("ERROR:unable to read efx table\n");
+        return 1;
+    }
+
+    if (table[0] == 0xfe && table[1] == 0xfe)
+    {
+        SD_PRINT("found resident efx data\n");
+
+        if (size > 0x7800)
+        {
+            SD_WARN("ERROR: efx data too large\n");
+            return 1;
+        }
+
+        if (fread(se_header, size - 2048, 1, fp) != 1)
+        {
+            SD_WARN("ERROR:unable to read efx data\n");
+            return 1;
+        }
+    }
+    else
+    {
+        SD_PRINT("found additional efx data\n");
+
+        if (size > 0x4800)
+        {
+            SD_WARN("ERROR: efx data too large\n");
+            return 1;
+        }
+
+        memcpy(se_exp_table, table, 2048);
+
+        if (fread(se_exp_header, size - 2048, 1, fp) != 1)
+        {
+            SD_WARN("ERROR:unable to read efx data\n");
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
 #define PACK_BLOCK_SIZE 0x800
 
 int sd_pack_data_load(const char *name)
@@ -160,8 +200,8 @@ int sd_pack_data_load(const char *name)
     FILE *fp;
     PACK_H header;
     size_t size;
-    size_t rb;
     size_t wvx_size;
+    size_t efx_size;
     size_t mdx_size;
 
     fp = fopen(name, "rb");
@@ -175,8 +215,7 @@ int sd_pack_data_load(const char *name)
     size = ftell(fp);
     fseek(fp, 0, SEEK_SET);
 
-    rb = fread(&header, sizeof(header), 1, fp);
-    if (rb != 1)
+    if (fread(&header, sizeof(header), 1, fp) != 1)
     {
         SD_WARN("ERROR:unable to read sound pack header\n");
         goto error;
@@ -188,12 +227,20 @@ int sd_pack_data_load(const char *name)
     header.mdx_offset *= PACK_BLOCK_SIZE;
 
     wvx_size = header.wvx2_offset - header.wvx1_offset;
+    efx_size = header.mdx_offset - header.efx_offset;
     mdx_size = size - header.mdx_offset;
 
     fseek(fp, header.wvx1_offset, SEEK_SET);
     if (sd_wav_data_load(fp, wvx_size))
     {
         SD_WARN("ERROR:unable to read WVX\n");
+        goto error;
+    }
+
+    fseek(fp, header.efx_offset, SEEK_SET);
+    if (sd_efx_data_load(fp, efx_size))
+    {
+        SD_WARN("ERROR:unable to read EFX\n");
         goto error;
     }
 

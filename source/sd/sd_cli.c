@@ -19,38 +19,40 @@ static int SePlay(unsigned int sound_code)
     int       pri;
 
     se.code = sound_code;
-    sound_code &= 0xFF;
+    sound_code &= 0x7FF;
 
-    if (sound_code < 128)
+    if (sound_code < 256)
     {
-        se_tracks = se_tbl[sound_code].tracks;
-        se.character = se_tbl[sound_code].character;
+        se_tracks = se_header[sound_code].tracks;
+        se.character = se_header[sound_code].character;
     }
     else
     {
-        se_tracks = se_exp_table[sound_code - 128].tracks;
-        se.character = se_exp_table[sound_code - 128].character;
+        /* TODO: remap */
+
+        se_tracks = se_exp_header[sound_code - 256].tracks;
+        se.character = se_exp_header[sound_code - 256].character;
     }
 
     for (int track = 0; track < se_tracks; track++)
     {
-        if (sound_code < 128)
+        if (sound_code < 256)
         {
-            se.pri = se_tbl[sound_code].pri;
-            se.kind = se_tbl[sound_code].kind;
-            se.addr = se_tbl[sound_code].addr[track];
+            se.pri = se_header[sound_code].pri;
+            se.kind = se_header[sound_code].kind;
+            se.addr = se_data + se_header[sound_code].addr[track];
         }
         else
         {
-            se.pri = se_exp_table[sound_code - 128].pri;
-            se.kind = se_exp_table[sound_code - 128].kind;
-            se.addr = se_header + se_exp_table[sound_code - 128].addr[track];
+            se.pri = se_exp_header[sound_code - 256].pri;
+            se.kind = se_exp_header[sound_code - 256].kind;
+            se.addr = se_exp_data + se_exp_header[sound_code - 256].addr[track];
         }
 
         index = -1;
         pri = 256;
 
-        for (int i = 0; i < 8; i++)
+        for (int i = 0; i < 12; i++)
         {
             if (((se_playing[i].code & 0xFF) == sound_code) && !se_request[i].code)
             {
@@ -83,7 +85,7 @@ static int SePlay(unsigned int sound_code)
 
         if (index < 0)
         {
-            for (int i = 0; i < 8; i++)
+            for (int i = 0; i < 12; i++)
             {
                 if ((se_playing[i].code != 0) || (se_request[i].code != 0))
                 {
@@ -97,7 +99,7 @@ static int SePlay(unsigned int sound_code)
 
             if (index < 0)
             {
-                for (int i = 0; i < 8; i++)
+                for (int i = 0; i < 12; i++)
                 {
                     if (se_request[i].code == 0 && se_playing[i].pri <= pri)
                     {

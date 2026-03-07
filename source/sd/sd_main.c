@@ -27,6 +27,16 @@ static void sd_init_volume(void)
     spu_set_master_volume(0x3fff, 0x3fff);
 }
 
+static void sd_mem_alloc(void)
+{
+    se_header = (SETBL *)se_data_area;
+    se_data = se_data_area + 4096;
+
+    se_exp_table = se_exp_data_area;
+    se_exp_header = (SETBL *)(se_exp_data_area + 2048);
+    se_exp_data = se_exp_data_area + 6144;
+}
+
 void sd_init(int debug, int loops, int reverb)
 {
     sd_debug_mode = debug;
@@ -37,6 +47,8 @@ void sd_init(int debug, int loops, int reverb)
     memset(spu_tr_wk, 0, sizeof(spu_tr_wk));
 
     SD_PRINT("SD:START\n");
+
+    sd_mem_alloc();
 
     spu_init();
 
@@ -65,9 +77,6 @@ void sd_init(int debug, int loops, int reverb)
         mix_fader[i].target = 0;
         mix_fader[i].pan = 32;
     }
-
-    se_exp_table = (SETBL2 *)se_header;
-    se_data  = (unsigned char *)(se_exp_table + 128);
 }
 
 void sd_term(void)

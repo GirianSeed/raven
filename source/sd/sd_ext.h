@@ -148,9 +148,6 @@ int sd_se_play(void);
 int sd_set_cli(int sound_code, int sync_mode);
 int sd_sng_code(void);
 
-/* in se_tbl.c */
-extern SETBL se_tbl[128];
-
 /* in sd_wk.c */
 extern  int            sd_debug_mode;
 extern  int            song_loop_count;
@@ -185,8 +182,11 @@ extern  unsigned int   mtrack;
 extern  int            se_vol[SD_SE_VOICES];
 extern  int            eoffs;
 extern  unsigned int   keyons;
+extern  unsigned char *se_exp_table;
 extern  unsigned char *se_data;
-extern  SETBL2        *se_exp_table;
+extern  unsigned char *se_exp_data;
+extern  SETBL         *se_header;
+extern  SETBL         *se_exp_header;
 extern  unsigned int   keyoffs;
 extern  unsigned char  sng_data[0x20000];
 extern  unsigned int   song_end;
@@ -194,7 +194,8 @@ extern  unsigned int   song_loop_end;
 extern  unsigned int   sng_play_code;
 extern  int            sound_mono_fg;
 extern  unsigned int   keyd;
-extern  unsigned char  se_header[0x2800];
+extern  unsigned char  se_data_area[0x7000];
+extern  unsigned char  se_exp_data_area[0x4800];
 extern  WAVE_W         voice_tbl[512];
 extern  WAVE_W         drum_tbl[64];
 extern  unsigned char *mptr;
