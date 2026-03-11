@@ -22,12 +22,12 @@ This project supports both FLAC and Opus Ogg output.
 `make`
 
 ## usage
-
-`raven [-d] [-r] [-l loops] [-s song] [-p phase] -o output -e encoder sdx [sdx2]`
-
 Up to two sdx files can be provided.<br>
 Resident sound files in `r_tnk` and `r_plt*` contain common samples used by all songs in their respective stages.<br>
 Normally the first file provided would be a resident file, and the second would be the file containing the song to play.
+
+### raven
+`raven [-d] [-r] [-l loops] [-s song] [-p phase] -o output -e encoder sdx [sdx2]`
 
 The following options are supported:
 ```
@@ -37,6 +37,18 @@ The following options are supported:
 -s song     Specifies which of the songs from the sequence data to play.
 -p phase    Specifies which phase to play for alert/evasion songs.
 -o output   Specifies the name of the output wave file.
+-e encoder  Specifies the encoder to use. ("flac" | "opus")
+```
+
+### playse
+`playse [-d] [-r] [-s se_id] -o outpath -e encoder sdx [sdx2]`
+
+The following options are supported:
+```
+-d          Enables debug output.
+-r          Forces reverb off.
+-s se_id    Specifies the sound effect ID to play, otherwise play all.
+-o outpath  Specifies the path of the output wave files.
 -e encoder  Specifies the encoder to use. ("flac" | "opus")
 ```
 
