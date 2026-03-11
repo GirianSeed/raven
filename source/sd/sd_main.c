@@ -42,9 +42,8 @@ static void sd_mem_alloc(void)
     se_header = (SETBL *)se_data_area;
     se_data = se_data_area + 4096;
 
-    se_exp_table = se_exp_data_area;
-    se_exp_header = (SETBL *)(se_exp_data_area + 2048);
-    se_exp_data = se_exp_data_area + 6144;
+    se_exp_header = (SETBL *)se_exp_data_area;
+    se_exp_data = se_exp_data_area + 4096;
 }
 
 void sd_init(int debug, int loops, int reverb)

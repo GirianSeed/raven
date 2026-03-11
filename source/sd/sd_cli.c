@@ -16,7 +16,6 @@ static int SePlay(unsigned int sound_code)
 {
     SEPLAYTBL se;
     int       bits;
-    int       exp_code = -1;
     int       index;
     int       pri;
 
@@ -43,15 +42,8 @@ static int SePlay(unsigned int sound_code)
     }
     else
     {
-        exp_code = se_exp_table[sound_code - 256];
-        if (exp_code == 0xff)
-        {
-            SD_WARN("ERR:se_exp_table offset(%x)\n", sound_code);
-            return -1;
-        }
-
-        se_tracks = se_exp_header[exp_code].tracks;
-        se.character = se_exp_header[exp_code].character;
+        se_tracks = se_exp_header[sound_code - 256].tracks;
+        se.character = se_exp_header[sound_code - 256].character;
     }
 
     for (int track = 0; track < se_tracks; track++)
@@ -64,9 +56,9 @@ static int SePlay(unsigned int sound_code)
         }
         else
         {
-            se.pri = se_exp_header[exp_code].pri;
-            se.kind = se_exp_header[exp_code].kind;
-            se.addr = se_exp_data + se_exp_header[exp_code].addr[track];
+            se.pri = se_exp_header[sound_code - 256].pri;
+            se.kind = se_exp_header[sound_code - 256].kind;
+            se.addr = se_exp_data + se_exp_header[sound_code - 256].addr[track];
         }
 
         index = -1;

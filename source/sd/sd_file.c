@@ -191,8 +191,6 @@ static int sd_efx_data_load(FILE *fp, size_t size)
             return 1;
         }
 
-        memcpy(se_exp_table, table, 2048);
-
         if (fread(se_exp_header, size - 2048, 1, fp) != 1)
         {
             SD_WARN("ERROR:unable to read efx data\n");
