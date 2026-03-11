@@ -66,7 +66,7 @@ static int SePlay(unsigned int sound_code)
         {
             se.pri = se_exp_table[sound_code - 128].pri;
             se.kind = se_exp_table[sound_code - 128].kind;
-            se.addr = se_header + se_exp_table[sound_code - 128].addr[track];
+            se.addr = se_data + se_exp_table[sound_code - 128].addr[track];
         }
 
         index = -1;

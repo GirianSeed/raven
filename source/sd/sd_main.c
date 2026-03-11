@@ -50,7 +50,7 @@ void sd_init(int debug, int loops, int reverb)
     }
 
     se_exp_table = (SETBL2 *)se_header;
-    se_data  = (unsigned char *)(se_exp_table + 128);
+    se_data = (unsigned char *)(se_exp_table + 128);
 }
 
 void sd_term(void)

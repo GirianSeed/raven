@@ -1,10 +1,6 @@
 #!/usr/bin/make -f
 .PHONY: all clean
 
-TARGET      = raven
-SRCS        = source/raven.c
-OBJS        = $(SRCS:.c=.o)
-
 # add encoder sources
 SRCS        += source/encoder/flac.c
 SRCS        += source/encoder/opus.c
@@ -26,11 +22,26 @@ SRCS        += source/sd/se_tbl.c
 CFLAGS      = --std=gnu99 -g -O2 -Wall -Wextra -Wshadow -Isource -Isource/lib -I/usr/include/opus
 LDFLAGS     = -lFLAC -lopusenc
 
-all: $(TARGET)
+RAVEN       = raven
+RAVEN_SRCS  = source/raven.c
+RAVEN_SRCS  += $(SRCS)
+RAVEN_OBJS  = $(RAVEN_SRCS:.c=.o)
 
-$(TARGET): $(OBJS)
+PLAYSE      = playse
+PLAYSE_SRCS = source/playse.c
+PLAYSE_SRCS += $(SRCS)
+PLAYSE_OBJS = $(PLAYSE_SRCS:.c=.o)
+
+all: $(RAVEN) $(PLAYSE)
+
+$(RAVEN): $(RAVEN_OBJS)
+	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
+
+$(PLAYSE): $(PLAYSE_OBJS)
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
 clean:
-	-$(RM) $(OBJS)
-	-$(RM) $(TARGET)
+	-$(RM) $(RAVEN_OBJS)
+	-$(RM) $(PLAYSE_OBJS)
+	-$(RM) $(RAVEN)
+	-$(RM) $(PLAYSE)
