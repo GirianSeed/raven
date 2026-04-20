@@ -142,6 +142,11 @@ int main(int argc, char **argv)
             return 1;
         }
 
+        sd_tick();
+        sd_tick();
+        sd_tick();
+        sd_tick();
+
         do
         {
             sd_tick();
