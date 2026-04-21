@@ -19,7 +19,10 @@ SRCS        += source/sd/sd_sub2.c
 SRCS        += source/sd/sd_wk.c
 SRCS        += source/sd/se_tbl.c
 
-CFLAGS      = --std=gnu99 -g -O2 -Wall -Wextra -Wshadow -Isource -Isource/lib -I/usr/include/opus
+# get paths from pkg-config
+OPUS_INCDIR := $(shell pkg-config --cflags opus)
+
+CFLAGS      = --std=gnu99 -g -O2 -Wall -Wextra -Wshadow -Isource -Isource/lib $(OPUS_INCDIR)
 LDFLAGS     = -lFLAC -lopusenc
 
 RAVEN       = raven
