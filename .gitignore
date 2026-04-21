@@ -3,6 +3,7 @@ raven
 playse
 
 *.o
+*.exe
 *.flac
 *.ogg
 *.wav
